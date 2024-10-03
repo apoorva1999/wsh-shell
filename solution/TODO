@@ -1,0 +1,7 @@
+- Makefile done
+    - CC
+    - CFLAGS
+    - LOGIN 
+    - SUBMITPATH
+    - $@
+    - $< or $^
