@@ -6,10 +6,12 @@
 #include<string.h>
 #include <unistd.h> 
 #include <limits.h>  // For PATH_MAX
+#include <dirent.h>
 
 #define EXIT "exit"
 #define DELIMETER " "
 #define CD "cd"
+#define LS "ls"
 
 void exitF(void) {
     exit(0);
@@ -29,13 +31,6 @@ int  getString(char **input, FILE *f)
     return len;
 }
 
-// void remove_newline(char *str) {
-//     size_t len = strlen(str);  // Get the length of the string
-//     if (len > 0 && str[len-1] == '\n') {
-//         str[len-1] = '\0';     // Replace '\n' with '\0'
-//     }
-// }
-
 void cdF(void) {
     // char cwd[PATH_MAX];
     // getcwd(cwd, sizeof(cwd));
@@ -44,6 +39,30 @@ void cdF(void) {
     if(strtok(NULL, DELIMETER) != NULL) return;
     if (chdir(dir) != 0) 
         perror("chdir() error");
+}
+
+int is_hidden(const struct dirent *entry) {
+    return entry->d_name[0] == '.';
+}
+
+void lsF(void) {
+    struct dirent **namelist;
+    int n;
+    n = scandir(".", &namelist, NULL, alphasort);
+    if (n == -1) {
+        perror("scandir");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < n; i++) {
+            if (!is_hidden(namelist[i])) {
+                printf("%s\n", namelist[i]->d_name);  
+            }
+            free(namelist[i]); 
+    }
+
+    free(namelist);
+    exit(EXIT_SUCCESS);
 }
 int main(int argc, char *argv[]) {
     char* bashscript=NULL;
@@ -54,17 +73,18 @@ int main(int argc, char *argv[]) {
 
     assert(bashscript == NULL);
 
-   char *buffer = (char *) malloc(sizeof(char));
+    char *buffer = (char *) malloc(sizeof(char));
    
     while( printf("wsh> ") && getString(&buffer, stdin) != EOF) {
         char* command = strtok(buffer, DELIMETER);
         if(strcmp(command, EXIT) == 0) {
-                exitF();
-        } 
-        else if(strcmp(command, CD) == 0) {
-           cdF();
+            exitF();
+        } else if(strcmp(command, CD) == 0) {
+            cdF();
+        } else if(strcmp(command, LS) == 0) {
+            lsF();
         }
-        
+
     }
     
    free(buffer);
