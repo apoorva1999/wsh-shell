@@ -1,11 +1,8 @@
-#include<stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <assert.h>
-#include<string.h>
 #include <unistd.h> 
-#include <limits.h>  // For PATH_MAX
 #include <dirent.h>
 
 #define EXIT "exit"
@@ -71,8 +68,7 @@ int main(int argc, char *argv[]) {
     }
     else if(argc>2) return -1;
 
-    assert(bashscript == NULL);
-
+    if(bashscript != NULL) return 0;
     char *buffer = (char *) malloc(sizeof(char));
    
     while( printf("wsh> ") && getString(&buffer, stdin) != EOF) {
