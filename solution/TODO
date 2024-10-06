@@ -5,3 +5,36 @@
     - SUBMITPATH
     - $@
     - $< or $^
+- Comments
+    - executable scripts
+- Redirections
+    - >
+    - < 
+    - >>
+    - &>
+    - &>>
+- Environment variables and shell variables
+    - Shell variables (local)
+    - export
+    - env (not a shell built-in)- print all environment variables
+    - For local variables, we use a built-in command in our shell called vars
+- Paths
+    -  access()
+    - Built-in.
+    - Full or relative path.
+    - Paths specified by $PATH.
+- history
+    - history set <n>
+    - execute a command - history <n>
+- built in commmands
+    - exit
+    - cd
+    - export
+    - local
+    - vars
+    - history
+    - ls
+
+
+
+

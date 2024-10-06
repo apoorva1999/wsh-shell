@@ -10,8 +10,14 @@
 #define CD "cd"
 #define LS "ls"
 
+char* PATH = "/bin";
+
+
+int exit_value = 0;
+
+
 void exitF(void) {
-    exit(0);
+    exit(exit_value);
 }
 
 int  getString(char **input, FILE *f)
@@ -34,8 +40,7 @@ void cdF(void) {
     // printf("Current directory: %s\n", cwd);
     char* dir = strtok(NULL, DELIMETER);
     if(strtok(NULL, DELIMETER) != NULL) return;
-    if (chdir(dir) != 0) 
-        perror("chdir() error");
+    exit_value =  chdir(dir);
 }
 
 int is_hidden(const struct dirent *entry) {
@@ -47,9 +52,8 @@ void lsF(void) {
     int n;
     n = scandir(".", &namelist, NULL, alphasort);
     if (n == -1) {
-        perror("scandir");
-        exit(EXIT_FAILURE);
-    }
+        exit_value = 1;
+    } else exit_value = 0;
 
     for (int i = 0; i < n; i++) {
             if (!is_hidden(namelist[i])) {
@@ -59,14 +63,14 @@ void lsF(void) {
     }
 
     free(namelist);
-    exit(EXIT_SUCCESS);
+    // exit(EXIT_SUCCESS);
 }
 int main(int argc, char *argv[]) {
     char* bashscript=NULL;
     if(argc==2) {
             bashscript = argv[1];
     }
-    else if(argc>2) return -1;
+    else if(argc>2) exit(EXIT_FAILURE);
 
     if(bashscript != NULL) return 0;
     char *buffer = (char *) malloc(sizeof(char));
