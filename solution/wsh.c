@@ -13,11 +13,12 @@
 #define HISTORY_CAP 5
 #define HISTORY "history"
 #define HISTORY_SET_REGEX "history set %d"
+#define EXECUTE_HISTORY_REGEX "history %d"
 char *PATH = "/bin";
 
 int exit_value = 0;
 
-void printS(char *name, char *val)
+void printS(char *name, const char *val)
 {
     printf("[%s : %s]\n", name, val);
 }
@@ -141,49 +142,37 @@ void resizeHistory(History *history, int newCapacity)
         exit_value = 1;
         return;
     }
+
+    int newSize;
     if (newCapacity <= history->size)
     {
-
-        int last = newCapacity;
-        for (int i = 0; i < newCapacity; i++)
-        {
-            const char *command = getHistory(history, last);
-            newEntries[i] = malloc(sizeof(char) * (strlen(command) + 1));
-            strcpy(newEntries[i], command);
-            last--;
-        }
-
-        for (int i = 0; i < history->size; i++)
-        {
-            free(history->entries[i]);
-        }
-        free(history->entries);
-        history->entries = newEntries;
-        history->cap = newCapacity;
-        history->size = newCapacity;
-        history->start = 0;
+        newSize = newCapacity;
     }
     else
     {
-        int last = history->size;
-        for (int i = 0; i < history->size; i++)
-        {
-            const char *command = getHistory(history, last);
-            newEntries[i] = malloc(sizeof(char) * (strlen(command) + 1));
-            strcpy(newEntries[i], command);
-            last--;
-        }
-
-        for (int i = 0; i < history->size; i++)
-        {
-            free(history->entries[i]);
-        }
-        free(history->entries);
-
-        history->entries = newEntries;
-        history->cap = newCapacity;
-        history->start = history->size;
+        newSize = history->size;
     }
+
+    int last = newSize;
+
+    for (int i = 0; i < newSize; i++)
+    {
+        const char *command = getHistory(history, last);
+        newEntries[i] = malloc(sizeof(char) * (strlen(command) + 1));
+        strcpy(newEntries[i], command);
+        last--;
+    }
+
+    for (int i = 0; i < history->size; i++)
+    {
+        free(history->entries[i]);
+    }
+    free(history->entries);
+
+    history->entries = newEntries;
+    history->cap = newCapacity;
+    history->size = newSize;
+    history->start = newSize % newCapacity;
 }
 
 void printHistory(History *history)
@@ -207,7 +196,7 @@ void freeHistory(History *history)
     free(history);
 }
 
-int isHistorySetFunction(const char *input)
+int setHistory(const char *input)
 {
     int num;
     if (sscanf(input, HISTORY_SET_REGEX, &num) == 1)
@@ -216,6 +205,17 @@ int isHistorySetFunction(const char *input)
     }
     return -1;
 }
+
+int executeNthCommand(const char *input)
+{
+    int num;
+    if (sscanf(input, EXECUTE_HISTORY_REGEX, &num) == 1)
+    {
+        return num;
+    }
+    return -1;
+}
+
 int main(int argc, char *argv[])
 {
     char *bashscript = NULL;
@@ -252,13 +252,21 @@ int main(int argc, char *argv[])
         {
             printHistory(history);
         }
-        else if ((n = isHistorySetFunction(input)) != -1)
+        else if ((n = setHistory(input)) != -1)
         {
             resizeHistory(history, n);
         }
+        else if ((n = executeNthCommand(input)) != -1)
+        {
+            const char *nthCommand = getHistory(history, n);
+            if (n < history->size)
+                printS("executing...", nthCommand);
+        }
         else
         {
-            addCommandInHistory(input, history);
+            const char *lastCommand = getHistory(history, 1);
+            if (lastCommand == NULL || (strcmp(lastCommand, input) != 0))
+                addCommandInHistory(input, history);
         }
     }
     free(buffer);
