@@ -8,14 +8,16 @@
 
 #define EXIT "exit"
 #define DELIMETER " "
+#define EQUAL_SIGN_DELIMETER "="
 #define CD "cd"
 #define LS "ls"
 #define HISTORY_CAP 5
 #define HISTORY "history"
 #define VARS "vars"
-#define HISTORY_SET_REGEX "history set %d"
-#define EXECUTE_HISTORY_REGEX "history %d"
+#define HISTORY_SET "set"
+#define LOCAL "local"
 char *PATH = "/bin";
+
 // extern char **environ;
 
 struct Node
@@ -298,36 +300,19 @@ void freeHistory(History *history)
     free(history);
 }
 
-void freeLocalVars(LocalVars *localVars) {
-    struct Node*temp = localVars->head;
-    while(temp) {
+void freeLocalVars(LocalVars *localVars)
+{
+    struct Node *temp = localVars->head;
+    while (temp)
+    {
         free(temp->key);
         free(temp->value);
-        struct Node* currTemp = temp;
+        struct Node *currTemp = temp;
         temp = temp->next;
         free(currTemp);
     }
 
     free(localVars);
-}
-int setHistory(const char *input)
-{
-    int num;
-    if (sscanf(input, HISTORY_SET_REGEX, &num) == 1)
-    {
-        return num;
-    }
-    return -1;
-}
-
-int executeNthCommand(const char *input)
-{
-    int num;
-    if (sscanf(input, EXECUTE_HISTORY_REGEX, &num) == 1)
-    {
-        return num;
-    }
-    return -1;
 }
 
 // bool isExport(const char* input, char **name, char **value) {
@@ -357,6 +342,61 @@ int executeNthCommand(const char *input)
 
 //     return 1; // Failed to parse
 // }
+
+void historyF(History *history)
+{
+    char *command = strtok(NULL, DELIMETER);
+
+    if (command == NULL)
+    {
+        printHistory(history);
+    }
+    else if (strcmp(command, HISTORY_SET) == 0)
+    {
+        command = strtok(NULL, DELIMETER);
+        int n = atoi(command);
+        if (n == 0)
+        {
+            fprintf(stderr, "Non-integer passed to history set command\n");
+            exit_value = 1;
+            return;
+        }
+        resizeHistory(history, n);
+    }
+    else
+    {
+        int n = atoi(command);
+        {
+            if (n == 0)
+            {
+                fprintf(stderr, "Non-integer passed to history command\n");
+                exit_value = 1;
+                return;
+            }
+            const char *nthHistory = getHistory(history, n);
+            if(nthHistory)
+            printS("executing....", nthHistory);
+        }
+    }
+}
+
+
+void localF(LocalVars* localVars) {
+    char *name = strtok(NULL, EQUAL_SIGN_DELIMETER);
+    char * value = strtok(NULL, EQUAL_SIGN_DELIMETER);
+
+    if(name == NULL) {
+        exit_value = 1;
+        return;
+    }
+
+    if(value == NULL) {
+        value = "";
+    }
+
+    addLocalVar(localVars, name, value);
+
+}
 
 bool isLocal(const char *input, char **name, char **value)
 {
@@ -408,10 +448,10 @@ int main(int argc, char *argv[])
     char *buffer = NULL;
     History *history = createHistory();
     LocalVars *localVars = createLocalVars();
-    int n;
-    char *input = (char *)malloc(sizeof(char));
-    char *name = NULL;
-    char *val = NULL;
+    // int n;
+    char *input = NULL;
+    // char *name = NULL;
+    // char *val = NULL;
 
     while (printf("wsh> ") && getString(&buffer, stdin) != EOF)
     {
@@ -430,32 +470,19 @@ int main(int argc, char *argv[])
         {
             lsF();
         }
-        else if (strcmp(input, HISTORY) == 0)
+        else if (strcmp(command, HISTORY) == 0)
         {
-            printHistory(history);
-        }
-        else if ((n = setHistory(input)) != -1)
-        {
-            resizeHistory(history, n);
-        }
-        else if ((n = executeNthCommand(input)) != -1)
-        {
-            const char *nthCommand = getHistory(history, n);
-            if (n < history->size)
-                printS("executing...", nthCommand);
+            historyF(history);
         }
         // } else if(isExport(input, &name, &val)) {
         //     export(name, val);
         //     free(name);
         //     free(val);
         // }
-        else if (isLocal(input, &name, &val))
-        {
-            addLocalVar(localVars, name, val);
-            free(name);
-            free(val);
+        else if(strcmp(command, LOCAL) == 0) {
+            localF(localVars);
         }
-        else if (strcmp(input, VARS) == 0)
+        else if (strcmp(command, VARS) == 0)
         {
             varsF(localVars);
         }
@@ -466,6 +493,7 @@ int main(int argc, char *argv[])
                 addCommandInHistory(input, history);
         }
         free(buffer);
+        buffer = NULL;
     }
     free(buffer);
     free(input);
