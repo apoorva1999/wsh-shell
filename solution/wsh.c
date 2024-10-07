@@ -298,6 +298,18 @@ void freeHistory(History *history)
     free(history);
 }
 
+void freeLocalVars(LocalVars *localVars) {
+    struct Node*temp = localVars->head;
+    while(temp) {
+        free(temp->key);
+        free(temp->value);
+        struct Node* currTemp = temp;
+        temp = temp->next;
+        free(currTemp);
+    }
+
+    free(localVars);
+}
 int setHistory(const char *input)
 {
     int num;
@@ -395,7 +407,7 @@ int main(int argc, char *argv[])
         return 0;
     char *buffer = NULL;
     History *history = createHistory();
-    LocalVars *LocalVars = createLocalVars();
+    LocalVars *localVars = createLocalVars();
     int n;
     char *input = (char *)malloc(sizeof(char));
     char *name = NULL;
@@ -439,13 +451,13 @@ int main(int argc, char *argv[])
         // }
         else if (isLocal(input, &name, &val))
         {
-            addLocalVar(LocalVars, name, val);
+            addLocalVar(localVars, name, val);
             free(name);
             free(val);
         }
         else if (strcmp(input, VARS) == 0)
         {
-            varsF(LocalVars);
+            varsF(localVars);
         }
         else
         {
@@ -458,5 +470,6 @@ int main(int argc, char *argv[])
     free(buffer);
     free(input);
     freeHistory(history);
+    freeLocalVars(localVars);
     exit(0);
 }
