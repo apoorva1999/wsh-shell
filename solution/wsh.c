@@ -99,6 +99,11 @@ History *createHistory(void)
         fprintf(stderr, "Memory allocation failed\n");
         exit_value = 1;
     }
+
+    for (int i = 0; i < history->cap; i++) {
+        history->entries[i] = NULL;  // Initialize all pointers to NULL
+    }
+
     return history;
 }
 void addCommandInHistory(const char *command, History *history)
