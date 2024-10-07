@@ -94,6 +94,7 @@ History *createHistory(void)
     history->size = 0;
     history->cap = HISTORY_CAP;
     history->entries = malloc(sizeof(char *) * HISTORY_CAP);
+    history->start = 0;
     if (history->entries == NULL)
     {
         fprintf(stderr, "Memory allocation failed\n");
