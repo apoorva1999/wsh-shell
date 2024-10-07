@@ -12,9 +12,24 @@
 #define LS "ls"
 #define HISTORY_CAP 5
 #define HISTORY "history"
+#define VARS "vars"
 #define HISTORY_SET_REGEX "history set %d"
 #define EXECUTE_HISTORY_REGEX "history %d"
 char *PATH = "/bin";
+// extern char **environ;
+
+struct Node
+{
+    char *key;
+    char *value;
+    struct Node *next;
+};
+
+typedef struct
+{
+    struct Node *head;
+    int size;
+} LocalVars;
 
 int exit_value = 0;
 
@@ -33,6 +48,19 @@ void exitF(void)
     if (exit_value < 0)
         exit_value = 1;
     exit(exit_value);
+}
+
+void copyString(char **dest, const char *src)
+{
+    *dest = realloc(*dest, sizeof(char) * (strlen(src) + 1));
+    if (!(*dest))
+    {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit_value = 1;
+        return;
+    }
+
+    strcpy(*dest, src);
 }
 
 int getString(char **input, FILE *f)
@@ -55,6 +83,16 @@ void cdF(void)
     if (strtok(NULL, DELIMETER) != NULL)
         return;
     exit_value = chdir(dir);
+}
+
+void varsF(LocalVars *LocalVars)
+{
+    struct Node *temp = LocalVars->head;
+    while (temp)
+    {
+        printf("%s=%s\n", temp->key, temp->value);
+        temp = temp->next;
+    }
 }
 
 int is_hidden(const struct dirent *entry)
@@ -88,6 +126,62 @@ typedef struct
     int start;
 } History;
 
+LocalVars *createLocalVars(void)
+{
+    LocalVars *localVars = malloc(sizeof(LocalVars));
+    localVars->head = NULL;
+    localVars->size = 0;
+    return localVars;
+}
+
+struct Node *getLocalVars(LocalVars *localVars, char *name)
+{
+
+    struct Node *temp = localVars->head;
+    while (temp)
+    {
+        if (strcmp(temp->key, name) == 0)
+        {
+            return temp;
+        }
+        temp = temp->next;
+    }
+
+    return NULL;
+}
+void addLocalVar(LocalVars *localVars, char *name, char *val)
+{
+
+    struct Node *node = getLocalVars(localVars, name);
+
+    if (node != NULL)
+    {
+        copyString(&(node->value), val);
+        return;
+    }
+
+    node = (struct Node *)realloc(node, sizeof(struct Node));
+
+    node->key = NULL;
+    node->value = NULL;
+    node->next = NULL;
+    copyString(&(node->key), name);
+    copyString(&(node->value), val);
+
+    if (localVars->head == NULL)
+    {
+        localVars->head = node;
+    }
+    else
+    {
+        struct Node *temp = localVars->head;
+        while (temp->next)
+            temp = temp->next;
+        temp->next = node;
+    }
+    localVars->size++;
+}
+
 History *createHistory(void)
 {
     History *history = (History *)malloc(sizeof(History));
@@ -101,8 +195,9 @@ History *createHistory(void)
         exit_value = 1;
     }
 
-    for (int i = 0; i < history->cap; i++) {
-        history->entries[i] = NULL;  // Initialize all pointers to NULL
+    for (int i = 0; i < history->cap; i++)
+    {
+        history->entries[i] = NULL; // Initialize all pointers to NULL
     }
 
     return history;
@@ -222,6 +317,69 @@ int executeNthCommand(const char *input)
     return -1;
 }
 
+// bool isExport(const char* input, char **name, char **value) {
+//     if (strncmp(input, "export ", 7) != 0) {
+//         return 0; // Not a valid "export" command
+//     }
+
+//     const char *equalSign = strchr(input + 7, '=');
+//     if (!equalSign) {
+//         return 0; // No '=' found, invalid format
+//     }
+
+//     size_t nameLength = equalSign - (input + 7);
+//     size_t valueLength = strlen(equalSign + 1);
+
+//     *name = (char *)malloc(nameLength + 1);  // +1 for null terminator
+//     *value = (char *)malloc(valueLength + 1);
+
+//      if (*name == NULL || *value == NULL) {
+//         fprintf(stderr, "Memory allocation failed\n");
+//         return 0;
+//     }
+//     strncpy(*name, input + 7, nameLength);
+//     (*name)[nameLength] = '\0'; // Null-terminate the name string
+
+//     strcpy(*value, equalSign + 1); // Copy the value part
+
+//     return 1; // Failed to parse
+// }
+
+bool isLocal(const char *input, char **name, char **value)
+{
+    if (strncmp(input, "local ", 6) != 0)
+    {
+        return 0; // Not a valid "local" command
+    }
+
+    const char *equalSign = strchr(input + 6, '=');
+    if (!equalSign)
+    {
+        return 0; // No '=' found, invalid format
+    }
+
+    size_t nameLength = equalSign - (input + 6);
+    size_t valueLength = strlen(equalSign + 1);
+
+    *name = (char *)malloc(nameLength + 1); // +1 for null terminator
+    *value = (char *)malloc(valueLength + 1);
+
+    if (*name == NULL || *value == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 0;
+    }
+    strncpy(*name, input + 6, nameLength);
+    (*name)[nameLength] = '\0'; // Null-terminate the name string
+
+    strcpy(*value, equalSign + 1); // Copy the value part
+
+    return 1; // Failed to parse
+}
+// void export(const char* name, const char* val) {
+//     exit_value =  setenv(name, val, 1);
+// }
+
 int main(int argc, char *argv[])
 {
     char *bashscript = NULL;
@@ -236,11 +394,15 @@ int main(int argc, char *argv[])
         return 0;
     char *buffer = (char *)malloc(sizeof(char));
     History *history = createHistory();
+    LocalVars *LocalVars = createLocalVars();
     int n;
     char *input = (char *)malloc(sizeof(char));
+    char *name = NULL;
+    char *val = NULL;
+
     while (printf("wsh> ") && getString(&buffer, stdin) != EOF)
     {
-        input = malloc(sizeof(char) * (strlen(buffer)+1));
+        input = malloc(sizeof(char) * (strlen(buffer) + 1));
         strcpy(input, buffer);
         char *command = strtok(buffer, DELIMETER);
         if (strcmp(command, EXIT) == 0)
@@ -269,6 +431,21 @@ int main(int argc, char *argv[])
             if (n < history->size)
                 printS("executing...", nthCommand);
         }
+        // } else if(isExport(input, &name, &val)) {
+        //     export(name, val);
+        //     free(name);
+        //     free(val);
+        // }
+        else if (isLocal(input, &name, &val))
+        {
+            addLocalVar(LocalVars, name, val);
+            free(name);
+            free(val);
+        }
+        else if (strcmp(input, VARS) == 0)
+        {
+            varsF(LocalVars);
+        }
         else
         {
             const char *lastCommand = getHistory(history, 1);
@@ -277,7 +454,6 @@ int main(int argc, char *argv[])
         }
 
         free(input);
-
     }
     free(buffer);
     freeHistory(history);
