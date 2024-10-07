@@ -12,6 +12,7 @@
 #define LS "ls"
 #define HISTORY_CAP 5
 #define HISTORY "history"
+#define EXPORT "export"
 #define VARS "vars"
 #define HISTORY_SET "set"
 #define LOCAL "local"
@@ -203,7 +204,7 @@ History *createHistory(void)
 
     return history;
 }
-void addCommandInHistory(const char *command, History *history)
+void addEntryInHistory(History *history, const char *command)
 {
     if (history->size >= history->cap)
     {
@@ -233,6 +234,13 @@ const char *getHistory(History *history, int index)
     }
     int actualIndex = (history->start - index + history->cap) % history->cap;
     return history->entries[actualIndex];
+}
+
+void saveCommandToHistory(History *history, const char *command)
+{
+    const char *lastCommand = getHistory(history, 1);
+    if (lastCommand == NULL || (strcmp(lastCommand, command) != 0)) // two consecutive same commands should not be together
+        addEntryInHistory(history, command);
 }
 
 void resizeHistory(History *history, int newCapacity)
@@ -314,34 +322,6 @@ void freeLocalVars(LocalVars *localVars)
     free(localVars);
 }
 
-// bool isExport(const char* input, char **name, char **value) {
-//     if (strncmp(input, "export ", 7) != 0) {
-//         return 0; // Not a valid "export" command
-//     }
-
-//     const char *equalSign = strchr(input + 7, '=');
-//     if (!equalSign) {
-//         return 0; // No '=' found, invalid format
-//     }
-
-//     size_t nameLength = equalSign - (input + 7);
-//     size_t valueLength = strlen(equalSign + 1);
-
-//     *name = (char *)malloc(nameLength + 1);  // +1 for null terminator
-//     *value = (char *)malloc(valueLength + 1);
-
-//      if (*name == NULL || *value == NULL) {
-//         fprintf(stderr, "Memory allocation failed\n");
-//         return 0;
-//     }
-//     strncpy(*name, input + 7, nameLength);
-//     (*name)[nameLength] = '\0'; // Null-terminate the name string
-
-//     strcpy(*value, equalSign + 1); // Copy the value part
-
-//     return 1; // Failed to parse
-// }
-
 void historyF(History *history)
 {
     char *command = strtok(NULL, DELIMETER);
@@ -373,64 +353,46 @@ void historyF(History *history)
                 return;
             }
             const char *nthHistory = getHistory(history, n);
-            if(nthHistory)
-            printS("executing....", nthHistory);
+            if (nthHistory)
+                printS("executing....", nthHistory);
         }
     }
 }
 
-
-void localF(LocalVars* localVars) {
+void localF(LocalVars *localVars)
+{
     char *name = strtok(NULL, EQUAL_SIGN_DELIMETER);
-    char * value = strtok(NULL, EQUAL_SIGN_DELIMETER);
+    char *value = strtok(NULL, EQUAL_SIGN_DELIMETER);
 
-    if(name == NULL) {
+    if (name == NULL)
+    {
         exit_value = 1;
         return;
     }
 
-    if(value == NULL) {
+    if (value == NULL)
+    {
         value = "";
     }
 
     addLocalVar(localVars, name, value);
-
 }
 
-bool isLocal(const char *input, char **name, char **value)
+void exportF(void)
 {
-    if (strncmp(input, "local ", 6) != 0)
+    char *name = strtok(NULL, EQUAL_SIGN_DELIMETER);
+    char *value = strtok(NULL, EQUAL_SIGN_DELIMETER);
+    if (name == NULL)
     {
-        return 0; // Not a valid "local" command
+        exit_value = 1;
+        return;
     }
-
-    const char *equalSign = strchr(input + 6, '=');
-    if (!equalSign)
+    if (value == NULL)
     {
-        return 0; // No '=' found, invalid format
+        value = "";
     }
-
-    size_t nameLength = equalSign - (input + 6);
-    size_t valueLength = strlen(equalSign + 1);
-
-    *name = (char *)malloc(nameLength + 1); // +1 for null terminator
-    *value = (char *)malloc(valueLength + 1);
-
-    if (*name == NULL || *value == NULL)
-    {
-        fprintf(stderr, "Memory allocation failed\n");
-        return 0;
-    }
-    strncpy(*name, input + 6, nameLength);
-    (*name)[nameLength] = '\0'; // Null-terminate the name string
-
-    strcpy(*value, equalSign + 1); // Copy the value part
-
-    return 1; // Failed to parse
+    exit_value = setenv(name, value, 1);
 }
-// void export(const char* name, const char* val) {
-//     exit_value =  setenv(name, val, 1);
-// }
 
 int main(int argc, char *argv[])
 {
@@ -447,10 +409,7 @@ int main(int argc, char *argv[])
     char *buffer = NULL;
     History *history = createHistory();
     LocalVars *localVars = createLocalVars();
-    // int n;
     char *input = NULL;
-    // char *name = NULL;
-    // char *val = NULL;
 
     while (printf("wsh> ") && getString(&buffer, stdin) != EOF)
     {
@@ -473,12 +432,12 @@ int main(int argc, char *argv[])
         {
             historyF(history);
         }
-        // } else if(isExport(input, &name, &val)) {
-        //     export(name, val);
-        //     free(name);
-        //     free(val);
-        // }
-        else if(strcmp(command, LOCAL) == 0) {
+        else if (strcmp(command, EXPORT) == 0)
+        {
+            exportF();
+        }
+        else if (strcmp(command, LOCAL) == 0)
+        {
             localF(localVars);
         }
         else if (strcmp(command, VARS) == 0)
@@ -487,9 +446,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            const char *lastCommand = getHistory(history, 1);
-            if (lastCommand == NULL || (strcmp(lastCommand, input) != 0))
-                addCommandInHistory(input, history);
+            saveCommandToHistory(history, input);
         }
         free(buffer);
         buffer = NULL;
