@@ -6,8 +6,9 @@
 #include <dirent.h>
 
 #define EXIT "exit"
-#define DELIMETER " "
+#define SPACE_DELIMETER " "
 #define EQUAL_SIGN_DELIMETER "="
+#define COLON_SIGN_DELIMETER ":"
 #define CD "cd"
 #define LS "ls"
 #define HISTORY_CAP 5
@@ -81,8 +82,8 @@ int getString(char **input, FILE *f)
 
 void cdF(void)
 {
-    char *dir = strtok(NULL, DELIMETER);
-    if (strtok(NULL, DELIMETER) != NULL)
+    char *dir = strtok(NULL, SPACE_DELIMETER);
+    if (strtok(NULL, SPACE_DELIMETER) != NULL)
         return;
     exit_value = chdir(dir);
 }
@@ -324,7 +325,7 @@ void freeLocalVars(LocalVars *localVars)
 
 void historyF(History *history)
 {
-    char *command = strtok(NULL, DELIMETER);
+    char *command = strtok(NULL, SPACE_DELIMETER);
 
     if (command == NULL)
     {
@@ -332,7 +333,7 @@ void historyF(History *history)
     }
     else if (strcmp(command, HISTORY_SET) == 0)
     {
-        command = strtok(NULL, DELIMETER);
+        command = strtok(NULL, SPACE_DELIMETER);
         int n = atoi(command);
         if (n == 0)
         {
@@ -415,7 +416,7 @@ int main(int argc, char *argv[])
     {
         input = realloc(input, sizeof(char) * (strlen(buffer) + 1));
         strcpy(input, buffer);
-        char *command = strtok(buffer, DELIMETER);
+        char *command = strtok(buffer, SPACE_DELIMETER);
         if (strcmp(command, EXIT) == 0)
         {
             exitF();
