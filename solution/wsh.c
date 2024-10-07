@@ -272,5 +272,6 @@ int main(int argc, char *argv[])
     }
     free(buffer);
     free(input);
+    freeHistory(history);
     exit(0);
 }
