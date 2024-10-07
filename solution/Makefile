@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS-common = -std=c17 -Wall -Wextra -Werror -pedantic -std=gnu18
+CFLAGS-common = -std=c17 -Wall -Wextra -Werror -pedantic -std=gnu18 -fno-omit-frame-pointer
 CFLAGS = $(CFLAGS-common) -O2
 CFLAGS-dbg = $(CFLAGS-common) -Og -ggdb
 LOGIN=apoorva
