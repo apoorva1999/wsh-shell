@@ -229,12 +229,12 @@ int main(int argc, char *argv[])
     if (bashscript != NULL)
         return 0;
     char *buffer = (char *)malloc(sizeof(char));
-    char *buffer2 = malloc(sizeof(char) * strlen(buffer));
+    char *input = malloc(sizeof(char) * strlen(buffer));
     History *history = createHistory();
     int n;
     while (printf("wsh> ") && getString(&buffer, stdin) != EOF)
     {
-        strcpy(buffer2, buffer);
+        strcpy(input, buffer);
         char *command = strtok(buffer, DELIMETER);
         if (strcmp(command, EXIT) == 0)
         {
@@ -248,20 +248,20 @@ int main(int argc, char *argv[])
         {
             lsF();
         }
-        else if (strcmp(buffer2, HISTORY) == 0)
+        else if (strcmp(input, HISTORY) == 0)
         {
             printHistory(history);
         }
-        else if ((n = isHistorySetFunction(buffer2)) != -1)
+        else if ((n = isHistorySetFunction(input)) != -1)
         {
             resizeHistory(history, n);
         }
         else
         {
-            addCommandInHistory(buffer2, history);
+            addCommandInHistory(input, history);
         }
     }
     free(buffer);
-    free(buffer2);
+    free(input);
     exit(0);
 }
