@@ -269,9 +269,11 @@ int main(int argc, char *argv[])
             if (lastCommand == NULL || (strcmp(lastCommand, input) != 0))
                 addCommandInHistory(input, history);
         }
+
+        free(input);
+
     }
     free(buffer);
-    free(input);
     freeHistory(history);
     exit(0);
 }
