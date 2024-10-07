@@ -294,6 +294,7 @@ void freeHistory(History *history)
     {
         free(history->entries[i]);
     }
+    free(history->entries);
     free(history);
 }
 
@@ -392,7 +393,7 @@ int main(int argc, char *argv[])
 
     if (bashscript != NULL)
         return 0;
-    char *buffer = (char *)malloc(sizeof(char));
+    char *buffer = NULL;
     History *history = createHistory();
     LocalVars *LocalVars = createLocalVars();
     int n;
@@ -402,7 +403,7 @@ int main(int argc, char *argv[])
 
     while (printf("wsh> ") && getString(&buffer, stdin) != EOF)
     {
-        input = malloc(sizeof(char) * (strlen(buffer) + 1));
+        input = realloc(input, sizeof(char) * (strlen(buffer) + 1));
         strcpy(input, buffer);
         char *command = strtok(buffer, DELIMETER);
         if (strcmp(command, EXIT) == 0)
@@ -452,10 +453,10 @@ int main(int argc, char *argv[])
             if (lastCommand == NULL || (strcmp(lastCommand, input) != 0))
                 addCommandInHistory(input, history);
         }
-
-        free(input);
+        free(buffer);
     }
     free(buffer);
+    free(input);
     freeHistory(history);
     exit(0);
 }
