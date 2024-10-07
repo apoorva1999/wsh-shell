@@ -231,9 +231,10 @@ int main(int argc, char *argv[])
     char *buffer = (char *)malloc(sizeof(char));
     History *history = createHistory();
     int n;
+    char *input;
     while (printf("wsh> ") && getString(&buffer, stdin) != EOF)
     {
-        char *input = malloc(sizeof(char) * strlen(buffer));
+        input = malloc(sizeof(char) * strlen(buffer));
         strcpy(input, buffer);
         char *command = strtok(buffer, DELIMETER);
         if (strcmp(command, EXIT) == 0)
