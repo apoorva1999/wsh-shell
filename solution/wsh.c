@@ -4,7 +4,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <regex.h>
 
 #define EXIT "exit"
 #define DELIMETER " "
