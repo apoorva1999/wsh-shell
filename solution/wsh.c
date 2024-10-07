@@ -229,11 +229,11 @@ int main(int argc, char *argv[])
     if (bashscript != NULL)
         return 0;
     char *buffer = (char *)malloc(sizeof(char));
-    char *input = malloc(sizeof(char) * strlen(buffer));
     History *history = createHistory();
     int n;
     while (printf("wsh> ") && getString(&buffer, stdin) != EOF)
     {
+        char *input = malloc(sizeof(char) * strlen(buffer));
         strcpy(input, buffer);
         char *command = strtok(buffer, DELIMETER);
         if (strcmp(command, EXIT) == 0)
