@@ -17,7 +17,6 @@
 #define VARS "vars"
 #define HISTORY_SET "set"
 #define LOCAL "local"
-char *PATH = "/bin";
 
 // extern char **environ;
 
@@ -395,6 +394,99 @@ void exportF(void)
     exit_value = setenv(name, value, 1);
 }
 
+int addArg(char ***args, char *arg, int *argc)
+{
+    if ((*args = realloc(*args, sizeof(char *) * (*argc + 1))) != NULL)
+    {
+        if (arg)
+        {
+            (*args)[*argc] = strdup(arg);
+            if ((*args)[*argc] == NULL)
+            {
+                perror("failed to duplicate arg");
+            }
+        }
+        else
+            (*args)[*argc] = NULL;
+        (*argc)++;
+    }
+    else
+    {
+        perror("Failed to reallocate memory");
+        return 1;
+    }
+    return 0;
+}
+int executeCommand(char *command, char *input)
+{
+    char *arg = strtok(input, SPACE_DELIMETER);
+    char **args = NULL;
+    int argc = 0;
+    while (arg)
+    {
+        if (addArg(&args, arg, &argc) == 0)
+        {
+            arg = strtok(NULL, SPACE_DELIMETER);
+        }
+        else
+            return 1;
+    }
+
+    if (addArg(&args, NULL, &argc) != 0)
+        return 1;
+
+    char *PATH = getenv("PATH");
+    char *dir = strtok(PATH, COLON_SIGN_DELIMETER);
+    char *newPath = NULL;
+    exit_value = 1;
+    while (dir)
+    {
+
+        if ((newPath = realloc(newPath, sizeof(char) * (strlen(command) + strlen(dir) + 2))) != NULL) // 1 for null, other for slash
+        {
+            newPath[0] = '\0';
+            strcat(newPath, dir);
+            strcat(newPath, "/");
+            strcat(newPath, command);
+
+            if ((exit_value = access(newPath, X_OK)) == 0)
+            {
+                pid_t cpid = fork();
+                if (cpid < 0)
+                {
+                    perror("fork");
+                    exit_value = 1;
+                    break;
+                }
+                else if (cpid == 0)
+                {
+                    if (execv(newPath, args) == -1)
+                    {
+                        perror("execv failed");
+                        exit_value = 1;
+                        break;
+                    }
+                    perror("child process failed\n");
+                    exit_value = 1;
+                    break;
+                }
+                else
+                {
+                    wait(NULL);
+                    exit_value = 0;
+                    break;
+                }
+            }
+        }
+        dir = strtok(NULL, COLON_SIGN_DELIMETER);
+    }
+    for (int i = 0; i < argc; i++)
+        free(args[i]);
+    free(args);
+    free(newPath);
+    return exit_value;
+}
+
 int main(int argc, char *argv[])
 {
     char *bashscript = NULL;
@@ -411,6 +503,9 @@ int main(int argc, char *argv[])
     History *history = createHistory();
     LocalVars *localVars = createLocalVars();
     char *input = NULL;
+
+    printS("PATH", getenv("PATH"));
+    setenv("PATH", "/bin", 1);
 
     while (printf("wsh> ") && getString(&buffer, stdin) != EOF)
     {
@@ -448,6 +543,7 @@ int main(int argc, char *argv[])
         else
         {
             saveCommandToHistory(history, input);
+            executeCommand(command, input);
         }
         free(buffer);
         buffer = NULL;
