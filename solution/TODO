@@ -14,27 +14,36 @@
     - &>
     - &>>
 - Environment variables and shell variables
-    - Shell variables (local)
+    - Shell variables (local)       DONE
     - export
     - env (not a shell built-in)- print all environment variables
-    - For local variables, we use a built-in command in our shell called vars
-- Paths
+    - For local variables, we use a built-in command in our shell called vars      DONE
+    - Whenever the $ sign is used in a command, it is always followed by a variable name.
+- Paths 
     -  access()
     - Built-in.
     - Full or relative path.
     - Paths specified by $PATH.
-- history
-    - history set <n>
+- history   DONE
+    - history set <n>       DONE
     - execute a command - history <n>
 - built in commmands
-    - exit
-    - cd
-    - export
-    - local
-    - vars
-    - history
-    - ls
+    - exit  DONE (kinda)
+    - cd    DONE
+    - export    
+    - local  DONE
+    - vars      DONE
+    - history   DONE
+    - ls    DONE
 
 
 
 
+done
+exit, cd, ls, history,local
+
+todo
+path, redirection, env vars, export, $
+
+
+replace strcpy with strdup
