@@ -740,22 +740,15 @@ int main(int argc, char *argv[])
         }
 
         resetFDs();
-        if(input)
         free(input);
-        if(actual_input)
         free(actual_input);
-        if(input_after_redirection)
         free(input_after_redirection);
         input = NULL;
-        
     }
 
-    if(history)
     freeHistory(history);
-
-    if(localVars)
     freeLocalVars(localVars);
-    
+
     exit(0);
 }
 
