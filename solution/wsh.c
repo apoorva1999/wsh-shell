@@ -725,8 +725,6 @@ int executeCommand(char *command, char *input)
     char *dir = strtok(path, COLON_SIGN_DELIMETER);
     char *newPath = NULL;
     exit_value = 1;
-    // TODO : test other paths like env
-    // test what happes when we passs echo hello world
     while (dir)
     {
 
