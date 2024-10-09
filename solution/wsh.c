@@ -698,6 +698,8 @@ char *dollar_parsed_input(char *input)
 
         token = strtok(NULL, SPACE_DELIMETER);
     }
+
+    free(input);
     return output;
 }
 
@@ -892,8 +894,8 @@ int main(int argc, char *argv[])
         input = NULL;
     }
 
-    freeHistory(history);
     free(input);
+    freeHistory(history);
     freeLocalVars();
 
     exit(0);
