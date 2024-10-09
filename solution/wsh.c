@@ -657,6 +657,27 @@ int executeCommand(char *command, char *input)
     return exit_value;
 }
 
+void parse_for_redirection(char*input) {
+    for(int i=0;i<5;i++) {
+            /*
+                Finding if the redirection symbol is present or not
+                If yes, then return the ptr to start of the symbol
+                eg:
+                echo hello >>hello.txt
+                search for ">>"
+                ptr will be >>hello.txt
+            */
+            char* ptr = strstr(input, redirections[i]); 
+            if(ptr != NULL) {
+                char* file_path = strdup(ptr); // to not affect the redirection string by the next line
+                ptr[0] = '\0'; // to extract substring before >>hello.txt
+                redirection_functions[i](file_path);   
+                free(file_path);
+                break;
+            }
+     }
+}
+
 int main(int argc, char *argv[])
 {
     char *bashscript = NULL;
@@ -669,30 +690,21 @@ int main(int argc, char *argv[])
 
     if (bashscript != NULL)
         return 0;
-    char *buffer = NULL;
+    char *input = NULL;
     History *history = createHistory();
     LocalVars *localVars = createLocalVars();
-    char *input = NULL;
+    char *actual_input = NULL;
 
     setenv("PATH", "/bin", 1);
 
-    while (printf("wsh> ") && getString(&buffer, stdin) != EOF)
+    while (printf("wsh> ") && getString(&input, stdin) != EOF)
     {
-        input = realloc(input, sizeof(char) * (strlen(buffer) + 1));
-        strcpy(input, buffer);
-
+        actual_input = strdup(input);  // save the command to be saved in history
         
-        for(int i=0;i<5;i++) {
-            char* file_path = strstr(input, redirections[i]);
-            if(file_path != NULL) {
-                char* file_path_copy = strdup(file_path);
-                file_path[0] = '\0';
-                redirection_functions[i](file_path_copy);   
-                break;
-            }
-        }
+        parse_for_redirection(input);
 
-        char *command = strtok(buffer, SPACE_DELIMETER);
+        char* input_after_redirection = strdup(input);
+        char *command = strtok(input, SPACE_DELIMETER);
         if (strcmp(command, EXIT) == 0)
         {
             exitF();
@@ -723,18 +735,27 @@ int main(int argc, char *argv[])
         }
         else
         {
-            saveCommandToHistory(history, input);
-            executeCommand(command, input);
+            saveCommandToHistory(history, actual_input);
+            executeCommand(command, input_after_redirection);
         }
 
         resetFDs();
-        free(buffer);
-        buffer = NULL;
+        if(input)
+        free(input);
+        if(actual_input)
+        free(actual_input);
+        if(input_after_redirection)
+        free(input_after_redirection);
+        input = NULL;
+        
     }
-    free(buffer);
-    free(input);
+
+    if(history)
     freeHistory(history);
+
+    if(localVars)
     freeLocalVars(localVars);
+    
     exit(0);
 }
 
