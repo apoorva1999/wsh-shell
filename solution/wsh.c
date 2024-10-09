@@ -716,6 +716,43 @@ char **getArgv(char *input, int *argc)
     return argv;
 }
 
+int forkAndExec(char* path, char** argv)
+{
+    pid_t cpid = fork();
+    if (cpid < 0)
+    {
+        perror("fork");
+        return exit_value = 1;
+    }
+    else if (cpid == 0)
+    {
+        if (execv(path, argv) == -1)
+        {
+            perror("execv failed");
+            return exit_value = 1;
+        }
+        perror("child process failed");
+        exit_value = 1;
+
+    }
+    else
+    {
+        wait(NULL);
+        return exit_value = 0;
+    }
+    return exit_value = 0;
+}
+
+void updatePath(char** path, char*dir, char*command) {
+    size_t newSize = sizeof(char) * (strlen(command) + strlen(dir) + 2); // 1 for '\0', another for '/'
+    *path = realloc(*path, newSize);
+    if(!(*path)) exit(EXIT_FAILURE);
+    *path[0] = '\0';
+    strcat(*path, dir);
+    strcat(*path, "/");
+    strcat(*path, command);
+}
+
 int executeCommand(char *command, char *input)
 {
     const char *PATH = getenv("PATH");
@@ -724,46 +761,14 @@ int executeCommand(char *command, char *input)
     char *path = strdup(PATH);
     char *dir = strtok(path, COLON_SIGN_DELIMETER);
     char *newPath = NULL;
-    exit_value = 1;
     while (dir)
     {
-
-        if ((newPath = realloc(newPath, sizeof(char) * (strlen(command) + strlen(dir) + 2))) != NULL) // 1 for null, other for slash
+        updatePath(&newPath, dir, command);
+        if ((exit_value = access(newPath, X_OK)) == 0)
         {
-            newPath[0] = '\0';
-            strcat(newPath, dir);
-            strcat(newPath, "/");
-            strcat(newPath, command);
-            if ((exit_value = access(newPath, X_OK)) == 0)
-            {
-                pid_t cpid = fork();
-                if (cpid < 0)
-                {
-                    perror("fork");
-                    exit_value = 1;
-                    break;
-                }
-                else if (cpid == 0)
-                {
-                    if (execv(newPath, argv) == -1)
-                    {
-
-                        perror("execv failed");
-                        exit_value = 1;
-                        break;
-                    }
-                    perror("child process failed");
-                    exit_value = 1;
-                    break;
-                }
-                else
-                {
-                    wait(NULL);
-                    exit_value = 0;
-                    break;
-                }
-            }
+            exit_value = forkAndExec(newPath, argv);
         }
+        
         dir = strtok(NULL, COLON_SIGN_DELIMETER);
     }
     for (int i = 0; i < argc; i++)
