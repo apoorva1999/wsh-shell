@@ -223,6 +223,7 @@ typedef struct
     int size;
 } LocalVars;
 
+LocalVars *localVars = NULL;
 int exit_value = 0;
 
 void printD(char *name, int val)
@@ -272,9 +273,9 @@ void cdF(void)
     exit_value = chdir(dir);
 }
 
-void varsF(LocalVars *LocalVars)
+void varsF(void)
 {
-    struct Node *temp = LocalVars->head;
+    struct Node *temp = localVars->head;
     while (temp)
     {
         printf("%s=%s\n", temp->key, temp->value);
@@ -321,7 +322,7 @@ LocalVars *createLocalVars(void)
     return localVars;
 }
 
-struct Node *getLocalVars(LocalVars *localVars, char *name)
+struct Node *getLocalVars(char *name)
 {
 
     struct Node *temp = localVars->head;
@@ -336,10 +337,10 @@ struct Node *getLocalVars(LocalVars *localVars, char *name)
 
     return NULL;
 }
-void addLocalVar(LocalVars *localVars, char *name, char *val)
+void addLocalVar(char *name, char *val)
 {
 
-    struct Node *node = getLocalVars(localVars, name);
+    struct Node *node = getLocalVars(name);
 
     if (node != NULL)
     {
@@ -492,7 +493,7 @@ void freeHistory(History *history)
     free(history);
 }
 
-void freeLocalVars(LocalVars *localVars)
+void freeLocalVars(void)
 {
     struct Node *temp = localVars->head;
     while (temp)
@@ -545,7 +546,7 @@ void historyF(History *history)
     }
 }
 
-void localF(LocalVars *localVars)
+void localF(void)
 {
     char *name = strtok(NULL, EQUAL_SIGN_DELIMETER);
     char *value = strtok(NULL, EQUAL_SIGN_DELIMETER);
@@ -561,7 +562,7 @@ void localF(LocalVars *localVars)
         value = "";
     }
 
-    addLocalVar(localVars, name, value);
+    addLocalVar(name, value);
 }
 
 void exportF(void)
@@ -771,7 +772,7 @@ int main(int argc, char *argv[])
         return 0;
     char *input = NULL;
     History *history = createHistory();
-    LocalVars *localVars = createLocalVars();
+    localVars = createLocalVars();
     char *actual_input = NULL;
 
     setenv("PATH", "/bin", 1);
@@ -806,11 +807,11 @@ int main(int argc, char *argv[])
         }
         else if (strcmp(command, LOCAL) == 0)
         {
-            localF(localVars);
+            localF();
         }
         else if (strcmp(command, VARS) == 0)
         {
-            varsF(localVars);
+            varsF();
         }
         else
         {
@@ -827,7 +828,7 @@ int main(int argc, char *argv[])
 
     freeHistory(history);
     free(input);
-    freeLocalVars(localVars);
+    freeLocalVars();
 
     exit(0);
 }
