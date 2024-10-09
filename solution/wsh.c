@@ -551,15 +551,15 @@ void resetFDs(void) {
         close(stdout_fd);
     }
 
-    if(stdout_fd!=-1) {
+    if(stdin_fd!=-1) {
         dup2(stdin_fd, STDIN_FILENO);
         close(stdin_fd);
     }
 
     stdout_fd = -1;
     stderr_fd = -1;
-    file_fd = -1;
     stdin_fd = -1;
+    file_fd = -1;
 
 }
 int addArg(char ***args, char *arg, int *argc)
