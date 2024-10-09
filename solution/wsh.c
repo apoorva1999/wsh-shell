@@ -747,6 +747,7 @@ int main(int argc, char *argv[])
     }
 
     freeHistory(history);
+    free(input);
     freeLocalVars(localVars);
 
     exit(0);
