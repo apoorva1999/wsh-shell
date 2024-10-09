@@ -719,8 +719,9 @@ int executeCommand(char *command, char *input)
     if (addArg(&args, NULL, &argc) != 0)
         return 1;
 
-    char *PATH = getenv("PATH");
-    char *dir = strtok(PATH, COLON_SIGN_DELIMETER);
+    const char *PATH = getenv("PATH");
+    char *path = strdup(PATH);
+    char *dir = strtok(path, COLON_SIGN_DELIMETER);
     char *newPath = NULL;
     exit_value = 1;
     // TODO : test other paths like env
@@ -770,6 +771,7 @@ int executeCommand(char *command, char *input)
         free(args[i]);
     free(args);
     free(newPath);
+    free(path);
     return exit_value;
 }
 
