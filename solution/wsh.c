@@ -22,6 +22,7 @@
 #define VARS "vars"
 #define HISTORY_SET "set"
 #define LOCAL "local"
+#define DOLLAR '$'
 
 int stdout_fd = -1;
 int stderr_fd = -1;
@@ -635,10 +636,71 @@ int addArg(char ***args, char *arg, int *argc)
     else
     {
         perror("Failed to reallocate memory");
-        return 1;
+        exit(1);
     }
     return 0;
 }
+
+char *parse_dollar(char *token)
+{
+    token += 1;
+
+    char *value = NULL;
+    struct Node *node = NULL;
+    if ((value = getenv(token)))
+        return value;
+    else if ((node = getLocalVars(token)))
+    {
+        return node->value;
+    }
+    else
+        return "";
+}
+// concatenate two strings with spaces
+char *concat(char *a, char *b)
+{
+    int space_len = (strlen(a) == 0) ? 0 : 1;
+    a = realloc(a, sizeof(char) * (strlen(a) + strlen(b) + 1 + space_len)); // 1 for null, other for space
+
+    // error
+    if (a == NULL)
+        exit(EXIT_FAILURE);
+
+    if (space_len == 1)
+        a = strcat(a, " ");
+    a = strcat(a, b);
+    return a;
+}
+char *dollar_parsed_input(char *input)
+{
+
+    char *token = strtok(input, SPACE_DELIMETER);
+    char *output = malloc(sizeof(char));
+    output[0] = '\0';
+    while (token)
+    {
+        if (token[0] == DOLLAR)
+        {
+            if ((output = concat(output, parse_dollar(token))) == NULL)
+            {
+                exit_value = 1;
+                return output;
+            }
+        }
+        else
+        {
+            if ((output = concat(output, token)) == NULL)
+            {
+                exit_value = 1;
+                return output;
+            }
+        }
+
+        token = strtok(NULL, SPACE_DELIMETER);
+    }
+    return output;
+}
+
 int executeCommand(char *command, char *input)
 {
     char *arg = strtok(input, SPACE_DELIMETER);
@@ -775,6 +837,8 @@ int main(int argc, char *argv[])
     while (printf("wsh> ") && getString(&input, stdin) != EOF)
     {
         actual_input = strdup(input); // save the command to be saved in history
+
+        input = dollar_parsed_input(input);
 
         parse_for_redirection(input);
 
