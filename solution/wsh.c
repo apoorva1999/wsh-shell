@@ -617,7 +617,7 @@ void resetFDs(void)
     file_fd = -1;
     n_fd = -1;
 }
-int addArg(char ***args, char *arg, int *argc)
+void addArg(char ***args, char *arg, int *argc)
 {
     if ((*args = realloc(*args, sizeof(char *) * (*argc + 1))) != NULL)
     {
@@ -627,6 +627,7 @@ int addArg(char ***args, char *arg, int *argc)
             if ((*args)[*argc] == NULL)
             {
                 perror("failed to duplicate arg");
+                exit(EXIT_FAILURE);
             }
         }
         else
@@ -636,9 +637,8 @@ int addArg(char ***args, char *arg, int *argc)
     else
     {
         perror("Failed to reallocate memory");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
-    return 0;
 }
 
 char *parse_dollar(char *token)
@@ -703,25 +703,24 @@ char *dollar_parsed_input(char *input)
     return output;
 }
 
-int executeCommand(char *command, char *input)
+char **getArgv(char *input, int *argc)
 {
     char *arg = strtok(input, SPACE_DELIMETER);
-    char **args = NULL;
-    int argc = 0;
+    char **argv = NULL;
     while (arg)
     {
-        if (addArg(&args, arg, &argc) == 0)
-        {
-            arg = strtok(NULL, SPACE_DELIMETER);
-        }
-        else
-            return 1;
+        addArg(&argv, arg, argc);
+        arg = strtok(NULL, SPACE_DELIMETER);
     }
+    addArg(&argv, NULL, argc);
+    return argv;
+}
 
-    if (addArg(&args, NULL, &argc) != 0)
-        return 1;
-
+int executeCommand(char *command, char *input)
+{
     const char *PATH = getenv("PATH");
+    int argc = 0;
+    char **argv = getArgv(input, &argc);
     char *path = strdup(PATH);
     char *dir = strtok(path, COLON_SIGN_DELIMETER);
     char *newPath = NULL;
@@ -748,7 +747,7 @@ int executeCommand(char *command, char *input)
                 }
                 else if (cpid == 0)
                 {
-                    if (execv(newPath, args) == -1)
+                    if (execv(newPath, argv) == -1)
                     {
 
                         perror("execv failed");
@@ -770,8 +769,8 @@ int executeCommand(char *command, char *input)
         dir = strtok(NULL, COLON_SIGN_DELIMETER);
     }
     for (int i = 0; i < argc; i++)
-        free(args[i]);
-    free(args);
+        free(argv[i]);
+    free(argv);
     free(newPath);
     free(path);
     return exit_value;
