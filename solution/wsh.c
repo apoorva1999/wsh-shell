@@ -22,11 +22,6 @@
 #define VARS "vars"
 #define HISTORY_SET "set"
 #define LOCAL "local"
-#define REDIR_INPUT "<"
-#define REDIR_OUTPUT ">"
-#define APPEND_OUTPUT ">>"
-#define REDIR_OUTPUT_ERROR "&>"
-#define APPEND_OUTPUT_ERROR "&>>"
 
 int stdout_fd = -1;
 int stderr_fd = -1;
