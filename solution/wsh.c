@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdarg.h>
-
+#include <ctype.h>
 
 #define EXIT "exit"
 #define SPACE_DELIMETER " "
@@ -28,20 +28,22 @@
 #define REDIR_OUTPUT_ERROR "&>"
 #define APPEND_OUTPUT_ERROR "&>>"
 
-  
 int stdout_fd = -1;
 int stderr_fd = -1;
 int stdin_fd = -1;
+int n_fd = -1;
 int file_fd = -1;
+int N_FILENO = -1;
 
 // extern char **environ;
-char* redirections[] = {"&>>", "&>", ">>", ">" ,"<"};
+char *redirections[] = {"&>>", "&>", ">>", ">", "<"};
 void printS(char *name, const char *val)
 {
     printf("[%s : %s]\n", name, val);
 }
 
-void log_error(const char *fmt, ...) {
+void log_error(const char *fmt, ...)
+{
     va_list args;
     va_start(args, fmt);
 
@@ -51,115 +53,162 @@ void log_error(const char *fmt, ...) {
     va_end(args);
 }
 
-int save_fd(int oldfd, int* newfd, char*fd_name) {
+int save_fd(int oldfd, int *newfd, char *fd_name)
+{
     *newfd = dup(oldfd);
-    if(*newfd < 0) {
+    if (*newfd < 0)
+    {
         log_error("Failed to duplicate %s", fd_name);
         return 1;
     }
     return 0;
-} 
+}
 
-int copy_fd(int fd1, int fd2, char*fd1_name, char*fd2_name) {
-    if(dup2(fd1, fd2) < 0) {
+int copy_fd(int fd1, int fd2, char *fd1_name, char *fd2_name)
+{
+    if (dup2(fd1, fd2) < 0)
+    {
         log_error("Failed to duplicate %s to %s", fd1_name, fd2_name);
         return 1;
     }
     return 0;
 }
 
-int append_output_error(char* input) {
+int append_output_error(char *input)
+{
     // &>>
-    input+=3;
+    input += 3;
 
-    if(save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd")) return 1;
-    if(save_fd(STDERR_FILENO, &stderr_fd, "stderr_fd")) return 1;
+    if (save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd"))
+        return 1;
+    if (save_fd(STDERR_FILENO, &stderr_fd, "stderr_fd"))
+        return 1;
 
     file_fd = open(input, O_WRONLY | O_CREAT | O_APPEND, 0644);
-    if(file_fd < 0) {
+    if (file_fd < 0)
+    {
         log_error("Failed to open file %s", input);
         return 1;
     }
 
-    if(copy_fd(file_fd, STDOUT_FILENO, "file_fd", "stdout_fd"))  return 1;
-    if(copy_fd(file_fd, STDERR_FILENO, "file_fd", "stderr_fd"))  return 1;
+    if (copy_fd(file_fd, STDOUT_FILENO, "file_fd", "stdout_fd"))
+        return 1;
+    if (copy_fd(file_fd, STDERR_FILENO, "file_fd", "stderr_fd"))
+        return 1;
 
     return 0;
 }
 
-int redirect_output_error(char* input) {
+int redirect_output_error(char *input)
+{
     // &>
-    input+=2;
+    input += 2;
 
-    if(save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd")) return 1;
-    if(save_fd(STDERR_FILENO, &stderr_fd, "stderr_fd")) return 1;
-
+    if (save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd"))
+        return 1;
+    if (save_fd(STDERR_FILENO, &stderr_fd, "stderr_fd"))
+        return 1;
 
     file_fd = open(input, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if(file_fd < 0) {
+    if (file_fd < 0)
+    {
         perror("Failed to open file");
         return 1;
     }
 
-    if(copy_fd(file_fd, STDOUT_FILENO, "file_fd", "stdout_fd"))  return 1;
-    if(copy_fd(file_fd, STDERR_FILENO, "file_fd", "stderr_fd"))  return 1;
+    if (copy_fd(file_fd, STDOUT_FILENO, "file_fd", "stdout_fd"))
+        return 1;
+    if (copy_fd(file_fd, STDERR_FILENO, "file_fd", "stderr_fd"))
+        return 1;
 
     return 0;
 }
 
-
-int append_output(char* input) {
+int append_output(char *input)
+{
     // >>
-    input+=2;
+    input += 2;
 
-    if(save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd")) return 1;
+    int source_fd = (N_FILENO == -1) ? STDOUT_FILENO : N_FILENO;
 
-    file_fd = open(input, O_WRONLY | O_CREAT | O_APPEND , 0644);
-    if(file_fd < 0) {
+    if (N_FILENO == -1)
+    {
+        if (save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd"))
+            return 1;
+    }
+    else if (save_fd(N_FILENO, &n_fd, "n_fd"))
+        return 1;
+
+    file_fd = open(input, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    if (file_fd < 0)
+    {
         perror("Failed to open file");
         return 1;
     }
 
-    if(copy_fd(file_fd, STDOUT_FILENO, "file_fd", "stdout_fd"))  return 1;
-    
+    if (copy_fd(file_fd, source_fd, "file_fd", "stdout_fd"))
+        return 1;
+
     return 0;
 }
 
-
-int redirect_output(char* input) {
+int redirect_output(char *input)
+{
     // >
-    input+=1;
+    input += 1;
+    int source_fd = (N_FILENO == -1) ? STDOUT_FILENO : N_FILENO;
 
-    if(save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd")) return 1;
+    if (N_FILENO == -1)
+    {
+        if (save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd"))
+            return 1;
+    }
+    else if (save_fd(N_FILENO, &n_fd, "n_fd"))
+        return 1;
 
-    file_fd = open(input, O_WRONLY | O_CREAT | O_TRUNC , 0644);
-    if(file_fd < 0) {
+    file_fd = open(input, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (file_fd < 0)
+    {
         perror("Failed to open file");
         return 1;
     }
 
-    if(copy_fd(file_fd, STDOUT_FILENO, "file_fd", "stdout_fd"))  return 1;
-    
+    if (copy_fd(file_fd, source_fd, "file_fd", "stdout_fd"))
+        return 1;
+
     return 0;
 }
 
-int redirect_input(char* input) {
+int redirect_input(char *input)
+{
     // <
-    input+=1;
-    if(save_fd(STDIN_FILENO, &stdin_fd, "stdin_fd")) return 1;
+    input += 1;
 
-    file_fd = open(input, O_RDONLY | O_CREAT , 0644);
-    if(file_fd < 0) {
+    int source_fd = (N_FILENO == -1) ? STDIN_FILENO : N_FILENO;
+
+    if (N_FILENO == -1)
+    {
+        if (save_fd(STDIN_FILENO, &stdin_fd, "stdin_fd"))
+            return 1;
+    }
+
+    else if (save_fd(source_fd, &n_fd, "n_fd"))
+        return 1;
+
+    file_fd = open(input, O_RDONLY | O_CREAT, 0644);
+    if (file_fd < 0)
+    {
         perror("Failed to open file");
         return 1;
     }
 
-    if(copy_fd(file_fd, STDIN_FILENO, "file_fd", "stdout_fd"))  return 1;
-    
+    if (copy_fd(file_fd, source_fd, "file_fd", "stdout_fd"))
+        return 1;
+
     return 0;
 }
 
-int (*redirection_functions[])(char*) = {append_output_error, redirect_output_error, append_output, redirect_output, redirect_input};
+int (*redirection_functions[])(char *) = {append_output_error, redirect_output_error, append_output, redirect_output, redirect_input};
 
 struct Node
 {
@@ -175,8 +224,6 @@ typedef struct
 } LocalVars;
 
 int exit_value = 0;
-
-
 
 void printD(char *name, int val)
 {
@@ -492,7 +539,7 @@ void historyF(History *history)
             }
             const char *nthHistory = getHistory(history, n);
             if (nthHistory)
-                //TODO
+                // TODO
                 printS("executing....", nthHistory);
         }
     }
@@ -533,34 +580,45 @@ void exportF(void)
     exit_value = setenv(name, value, 1);
 }
 
-void resetFDs(void) {
-    if(file_fd!=-1) {
-       if(close(file_fd) < 0) {
+void resetFDs(void)
+{
+    if (file_fd != -1)
+    {
+        if (close(file_fd) < 0)
+        {
             exit_value = 1;
-       }
+        }
     }
 
-    if(stderr_fd!=-1) {
-        //todo: check -1
+    if (stderr_fd != -1)
+    {
+        // todo: check -1
         dup2(stderr_fd, STDERR_FILENO);
         close(stderr_fd);
     }
 
-    if(stdout_fd!=-1) {
+    if (stdout_fd != -1)
+    {
         dup2(stdout_fd, STDOUT_FILENO);
         close(stdout_fd);
     }
 
-    if(stdin_fd!=-1) {
+    if (stdin_fd != -1)
+    {
         dup2(stdin_fd, STDIN_FILENO);
         close(stdin_fd);
     }
 
+    if (n_fd != -1)
+    {
+        dup2(n_fd, N_FILENO);
+        close(n_fd);
+    }
     stdout_fd = -1;
     stderr_fd = -1;
     stdin_fd = -1;
     file_fd = -1;
-
+    n_fd = -1;
 }
 int addArg(char ***args, char *arg, int *argc)
 {
@@ -657,25 +715,46 @@ int executeCommand(char *command, char *input)
     return exit_value;
 }
 
-void parse_for_redirection(char*input) {
-    for(int i=0;i<5;i++) {
-            /*
-                Finding if the redirection symbol is present or not
-                If yes, then return the ptr to start of the symbol
-                eg:
-                echo hello >>hello.txt
-                search for ">>"
-                ptr will be >>hello.txt
-            */
-            char* ptr = strstr(input, redirections[i]); 
-            if(ptr != NULL) {
-                char* file_path = strdup(ptr); // to not affect the redirection string by the next line
-                ptr[0] = '\0'; // to extract substring before >>hello.txt
-                redirection_functions[i](file_path);   
-                free(file_path);
-                break;
+void parse_for_redirection(char *input)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        /*
+            Finding if the redirection symbol is present or not
+            If yes, then return the ptr to start of the symbol
+            eg:
+            echo hello >>hello.txt
+            search for ">>"
+            ptr will be >>hello.txt
+        */
+        char *ptr = strstr(input, redirections[i]);
+
+        if (ptr != NULL)
+        {
+            char *file_path = strdup(ptr); // to not affect the redirection string by the next line
+
+            int num = 0;
+            char *ptr2 = ptr - 1;
+            while (ptr2 > input && !isspace(*(ptr2)))
+                ptr2--;
+
+            if (ptr2 != ptr - 1)
+            {
+                char *ptr3 = ptr2 + 1;
+                int num_len = ptr - ptr3;
+                char *numS = strndup(ptr3, num_len);
+                num = atoi(numS);
+                printD("num", num);
+                N_FILENO = num;
+                ptr = ptr3;
             }
-     }
+
+            ptr[0] = '\0'; // to extract substring before >>hello.txt
+            redirection_functions[i](file_path);
+            free(file_path);
+            break;
+        }
+    }
 }
 
 int main(int argc, char *argv[])
@@ -699,11 +778,11 @@ int main(int argc, char *argv[])
 
     while (printf("wsh> ") && getString(&input, stdin) != EOF)
     {
-        actual_input = strdup(input);  // save the command to be saved in history
-        
+        actual_input = strdup(input); // save the command to be saved in history
+
         parse_for_redirection(input);
 
-        char* input_after_redirection = strdup(input);
+        char *input_after_redirection = strdup(input);
         char *command = strtok(input, SPACE_DELIMETER);
         if (strcmp(command, EXIT) == 0)
         {
@@ -752,4 +831,3 @@ int main(int argc, char *argv[])
 
     exit(0);
 }
-
