@@ -844,6 +844,11 @@ int main(int argc, char *argv[])
 
         char *input_after_redirection = strdup(input);
         char *command = strtok(input, SPACE_DELIMETER);
+        if (!command)
+        {
+            exit_value = 1;
+            continue;
+        }
         if (strcmp(command, EXIT) == 0)
         {
             exitF();
