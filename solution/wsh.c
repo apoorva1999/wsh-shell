@@ -750,8 +750,9 @@ bool fullPath(char *command, char **argv)
     return 0;
 }
 
-void searchInPATH(char *command, char *path, char **argv)
+bool searchInPATH(char *command, char *path, char **argv)
 {
+    bool found_in_path = 0;
     char *dir = strtok(path, COLON_SIGN_DELIMETER);
     char *newPath = NULL;
     while (dir)
@@ -759,13 +760,16 @@ void searchInPATH(char *command, char *path, char **argv)
         updatePath(&newPath, dir, command);
         if ((exit_value = access(newPath, X_OK)) == 0)
         {
+            found_in_path = 1;
             exit_value = forkAndExec(newPath, argv);
+            break;
         }
 
         dir = strtok(NULL, COLON_SIGN_DELIMETER);
     }
 
     free(newPath);
+    return found_in_path;
 }
 
 int executeCommand(char *command, char *input)
@@ -779,9 +783,13 @@ int executeCommand(char *command, char *input)
     if (fullPath(command, argv))
     {
     }
+    else if (searchInPATH(command, path, argv))
+    {
+    }
     else
     {
-        searchInPATH(command, path, argv);
+        perror("invalid command");
+        exit_value = 1;
     }
 
     for (int i = 0; i < argc; i++)
