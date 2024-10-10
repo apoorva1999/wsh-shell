@@ -38,6 +38,16 @@ void printS(char *name, const char *val)
     printf("[%s : %s]\n", name, val);
 }
 
+int atoi_check(char *number)
+{
+    for (int i = 0; number[i] != '\0'; i++)
+    {
+        if (!isdigit(number[i]))
+            return -1;
+    }
+    return atoi(number);
+}
+
 void log_error(const char *fmt, ...)
 {
     va_list args;
@@ -809,8 +819,13 @@ void parse_for_redirection(char *input)
                 char *ptr3 = ptr2 + 1;
                 int num_len = ptr - ptr3;
                 char *numS = strndup(ptr3, num_len);
-                num = atoi(numS); /// TODO NUM CHECK
-                printD("num", num);
+                num = atoi_check(numS); /// TODO NUM CHECK
+                if (num == -1)
+                {
+                    fprintf(stderr, "Non-integer passed to history set command\n");
+                    exit_value = 1;
+                    return;
+                }
                 N_FILENO = num;
                 ptr = ptr3;
             }
@@ -823,14 +838,16 @@ void parse_for_redirection(char *input)
     }
 }
 
-void executeNthHistory(char *input)
+void executeNthHistory(char *nthHistory)
 {
+    char *input = strdup(nthHistory);
     dollar_parsed_input(&input);
     parse_for_redirection(input);
     char *input2 = strdup(input); // because input will be corrupted by strtok
     char *command = strtok(input, SPACE_DELIMETER);
     executeCommand(command, input2);
     free(input2);
+    free(input);
 }
 
 void historyF(void)
@@ -844,8 +861,8 @@ void historyF(void)
     else if (strcmp(command, HISTORY_SET) == 0)
     {
         command = strtok(NULL, SPACE_DELIMETER);
-        int n = atoi(command);
-        if (n == 0)
+        int n = atoi_check(command);
+        if (n == -1)
         {
             fprintf(stderr, "Non-integer passed to history set command\n");
             exit_value = 1;
@@ -855,19 +872,17 @@ void historyF(void)
     }
     else
     {
-        int n = atoi(command);
+        int n = atoi_check(command);
+        if (n == -1)
         {
-            if (n == 0)
-            {
-                fprintf(stderr, "Non-integer passed to history command\n");
-                exit_value = 1;
-                return;
-            }
-            char *nthHistory = getHistory(n);
-            if (nthHistory)
-                // TODO
-                executeNthHistory(nthHistory);
+            fprintf(stderr, "Non-integer passed to history command\n");
+            exit_value = 1;
+            return;
         }
+        char *nthHistory = getHistory(n);
+        if (nthHistory)
+            // TODO
+            executeNthHistory(nthHistory);
     }
 }
 
