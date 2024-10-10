@@ -427,7 +427,7 @@ void addEntryInHistory(const char *command)
     history->start = (history->start + 1) % history->cap;
 }
 
-const char *getHistory(int index)
+char *getHistory(int index)
 {
     if (index < 1 || index > history->size)
     {
@@ -521,44 +521,6 @@ void freeLocalVars(void)
     }
 
     free(localVars);
-}
-
-void historyF(void)
-{
-    char *command = strtok(NULL, SPACE_DELIMETER);
-
-    if (command == NULL)
-    {
-        printHistory();
-    }
-    else if (strcmp(command, HISTORY_SET) == 0)
-    {
-        command = strtok(NULL, SPACE_DELIMETER);
-        int n = atoi(command);
-        if (n == 0)
-        {
-            fprintf(stderr, "Non-integer passed to history set command\n");
-            exit_value = 1;
-            return;
-        }
-        resizeHistory(n);
-    }
-    else
-    {
-        int n = atoi(command);
-        {
-            if (n == 0)
-            {
-                fprintf(stderr, "Non-integer passed to history command\n");
-                exit_value = 1;
-                return;
-            }
-            const char *nthHistory = getHistory(n);
-            if (nthHistory)
-                // TODO
-                printS("executing....", nthHistory);
-        }
-    }
 }
 
 void localF(void)
@@ -836,6 +798,54 @@ void parse_for_redirection(char *input)
     }
 }
 
+void executeNthHistory(char *input)
+{
+    dollar_parsed_input(&input);
+    parse_for_redirection(input);
+    char *input2 = strdup(input); // because input will be corrupted by strtok
+    char *command = strtok(input, SPACE_DELIMETER);
+    executeCommand(command, input2);
+    free(input2);
+}
+
+void historyF(void)
+{
+    char *command = strtok(NULL, SPACE_DELIMETER);
+
+    if (command == NULL)
+    {
+        printHistory();
+    }
+    else if (strcmp(command, HISTORY_SET) == 0)
+    {
+        command = strtok(NULL, SPACE_DELIMETER);
+        int n = atoi(command);
+        if (n == 0)
+        {
+            fprintf(stderr, "Non-integer passed to history set command\n");
+            exit_value = 1;
+            return;
+        }
+        resizeHistory(n);
+    }
+    else
+    {
+        int n = atoi(command);
+        {
+            if (n == 0)
+            {
+                fprintf(stderr, "Non-integer passed to history command\n");
+                exit_value = 1;
+                return;
+            }
+            char *nthHistory = getHistory(n);
+            if (nthHistory)
+                // TODO
+                executeNthHistory(nthHistory);
+        }
+    }
+}
+
 void parseAndExecuteInput(char *input)
 {
 
@@ -880,7 +890,7 @@ void parseAndExecuteInput(char *input)
     {
         varsF();
     }
-    else
+    else // non built in commands
     {
         saveCommandToHistory(actual_input);
         executeCommand(command, input_after_redirection);
@@ -936,7 +946,6 @@ int main(int argc, char *argv[])
     history = createHistory();
 
     setenv("PATH", "/bin", 1);
-
     executeShell(argc, wshscript);
 
     exit(0);
