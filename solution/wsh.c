@@ -283,8 +283,10 @@ int getString(char **input, FILE *f)
 void cdF(void)
 {
     char *dir = strtok(NULL, SPACE_DELIMETER);
-    if (strtok(NULL, SPACE_DELIMETER) != NULL)
+    if(dir == NULL || strtok(NULL, SPACE_DELIMETER) != NULL) {
+        exit_value = -1; // more than one aruments or no arguments
         return;
+    }
     exit_value = chdir(dir);
 }
 
