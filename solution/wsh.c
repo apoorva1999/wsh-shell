@@ -93,7 +93,7 @@ int append_output_error(char *input)
     file_fd = open(input, O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (file_fd < 0)
     {
-        log_error("Failed to open file %s", input);
+        // log_error("Failed to open file %s", input);
         return 1;
     }
 
@@ -118,7 +118,7 @@ int redirect_output_error(char *input)
     file_fd = open(input, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_fd < 0)
     {
-        perror("Failed to open file");
+        // perror("Failed to open file");
         return 1;
     }
 
@@ -148,7 +148,7 @@ int append_output(char *input)
     file_fd = open(input, O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (file_fd < 0)
     {
-        perror("Failed to open file");
+        // perror("Failed to open file");
         return 1;
     }
 
@@ -175,7 +175,7 @@ int redirect_output(char *input)
     file_fd = open(input, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_fd < 0)
     {
-        perror("Failed to open file");
+        // perror("Failed to open file");
         return 1;
     }
 
@@ -204,7 +204,7 @@ int redirect_input(char *input)
     file_fd = open(input, O_RDONLY | O_CREAT, 0644);
     if (file_fd < 0)
     {
-        perror("Failed to open file");
+        // perror("Failed to open file");
         return 1;
     }
 
@@ -504,7 +504,7 @@ void printHistory(void)
     for (int i = 1; i <= history->size; i++)
     {
         const char *command = getHistory(i);
-        printf("%d: %s\n", i, command);
+        printf("%d) %s\n", i, command);
     }
 }
 
@@ -627,7 +627,7 @@ void addArg(char ***args, char *arg, int *argc)
             (*args)[*argc] = strdup(arg);
             if ((*args)[*argc] == NULL)
             {
-                perror("failed to duplicate arg");
+                // perror("failed to duplicate arg");
                 exit(EXIT_FAILURE);
             }
         }
@@ -637,7 +637,7 @@ void addArg(char ***args, char *arg, int *argc)
     }
     else
     {
-        perror("Failed to reallocate memory");
+        // perror("Failed to reallocate memory");
         exit(EXIT_FAILURE);
     }
 }
@@ -707,17 +707,17 @@ int forkAndExec(char *path, char **argv)
     pid_t cpid = fork();
     if (cpid < 0)
     {
-        perror("fork");
+        // perror("fork");
         return exit_value = 1;
     }
     else if (cpid == 0)
     {
         if (execv(path, argv) == -1)
         {
-            perror("execv failed");
+            // perror("execv failed");
             return exit_value = 1;
         }
-        perror("child process failed");
+        // perror("child process failed");
         exit_value = 1;
     }
     else
@@ -788,7 +788,7 @@ int executeCommand(char *command, char *input)
     }
     else
     {
-        perror("invalid command");
+        // perror("invalid command");
         exit_value = 1;
     }
 
@@ -987,8 +987,13 @@ void executeShell(int argc, char *script)
 
     while (1)
     {
+
         if (argc == 1)
+        {
             printf("wsh> ");
+            fflush(stdout);
+        }
+
         if (getString(&input, input_source) == EOF)
             break;
         parseAndExecuteInput(input);
