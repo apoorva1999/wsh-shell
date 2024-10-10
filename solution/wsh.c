@@ -219,7 +219,17 @@ typedef struct
     int size;
 } LocalVars;
 
+typedef struct
+{
+    char **entries;
+    int size;
+    int cap;
+    int start;
+} History;
+
 LocalVars *localVars = NULL;
+History *history = NULL;
+
 int exit_value = 0;
 
 void printD(char *name, int val)
@@ -302,13 +312,6 @@ void lsF(void)
 
     free(namelist);
 }
-typedef struct
-{
-    char **entries;
-    int size;
-    int cap;
-    int start;
-} History;
 
 LocalVars *createLocalVars(void)
 {
@@ -402,7 +405,7 @@ History *createHistory(void)
 
     return history;
 }
-void addEntryInHistory(History *history, const char *command)
+void addEntryInHistory(const char *command)
 {
     if (history->size >= history->cap)
     {
@@ -424,7 +427,7 @@ void addEntryInHistory(History *history, const char *command)
     history->start = (history->start + 1) % history->cap;
 }
 
-const char *getHistory(History *history, int index)
+const char *getHistory(int index)
 {
     if (index < 1 || index > history->size)
     {
@@ -434,14 +437,14 @@ const char *getHistory(History *history, int index)
     return history->entries[actualIndex];
 }
 
-void saveCommandToHistory(History *history, const char *command)
+void saveCommandToHistory(const char *command)
 {
-    const char *lastCommand = getHistory(history, 1);
+    const char *lastCommand = getHistory(1);
     if (lastCommand == NULL || (strcmp(lastCommand, command) != 0)) // two consecutive same commands should not be together
-        addEntryInHistory(history, command);
+        addEntryInHistory(command);
 }
 
-void resizeHistory(History *history, int newCapacity)
+void resizeHistory(int newCapacity)
 {
     char **newEntries = (char **)malloc(newCapacity * sizeof(char *));
     if (!newEntries)
@@ -465,7 +468,7 @@ void resizeHistory(History *history, int newCapacity)
 
     for (int i = 0; i < newSize; i++)
     {
-        const char *command = getHistory(history, last);
+        const char *command = getHistory(last);
         newEntries[i] = malloc(sizeof(char) * (strlen(command) + 1));
         strcpy(newEntries[i], command);
         last--;
@@ -483,19 +486,19 @@ void resizeHistory(History *history, int newCapacity)
     history->start = newSize % newCapacity;
 }
 
-void printHistory(History *history)
+void printHistory(void)
 {
     if (history->size == 0)
         return;
 
     for (int i = 1; i <= history->size; i++)
     {
-        const char *command = getHistory(history, i);
+        const char *command = getHistory(i);
         printf("%d: %s\n", i, command);
     }
 }
 
-void freeHistory(History *history)
+void freeHistory(void)
 {
     for (int i = 0; i < history->cap; i++)
     {
@@ -520,13 +523,13 @@ void freeLocalVars(void)
     free(localVars);
 }
 
-void historyF(History *history)
+void historyF(void)
 {
     char *command = strtok(NULL, SPACE_DELIMETER);
 
     if (command == NULL)
     {
-        printHistory(history);
+        printHistory();
     }
     else if (strcmp(command, HISTORY_SET) == 0)
     {
@@ -538,7 +541,7 @@ void historyF(History *history)
             exit_value = 1;
             return;
         }
-        resizeHistory(history, n);
+        resizeHistory(n);
     }
     else
     {
@@ -550,7 +553,7 @@ void historyF(History *history)
                 exit_value = 1;
                 return;
             }
-            const char *nthHistory = getHistory(history, n);
+            const char *nthHistory = getHistory(n);
             if (nthHistory)
                 // TODO
                 printS("executing....", nthHistory);
@@ -682,10 +685,10 @@ char *concat(char *a, char *b)
     a = strcat(a, b);
     return a;
 }
-char *dollar_parsed_input(char *input)
+void dollar_parsed_input(char **input)
 {
 
-    char *token = strtok(input, SPACE_DELIMETER);
+    char *token = strtok(*input, SPACE_DELIMETER);
     char *output = malloc(sizeof(char));
     output[0] = '\0';
     while (token)
@@ -694,24 +697,24 @@ char *dollar_parsed_input(char *input)
         {
             if ((output = concat(output, parse_dollar(token))) == NULL)
             {
-                exit_value = 1;
-                return output;
+                free(output);
+                exit(EXIT_FAILURE);
             }
         }
         else
         {
             if ((output = concat(output, token)) == NULL)
             {
-                exit_value = 1;
-                return output;
+                free(output);
+                exit(EXIT_FAILURE);
             }
         }
 
         token = strtok(NULL, SPACE_DELIMETER);
     }
 
-    free(input);
-    return output;
+    free(*input);
+    *input = output;
 }
 
 char **getArgv(char *input, int *argc)
@@ -819,7 +822,7 @@ void parse_for_redirection(char *input)
                 char *ptr3 = ptr2 + 1;
                 int num_len = ptr - ptr3;
                 char *numS = strndup(ptr3, num_len);
-                num = atoi(numS);
+                num = atoi(numS); /// TODO NUM CHECK
                 printD("num", num);
                 N_FILENO = num;
                 ptr = ptr3;
@@ -833,84 +836,108 @@ void parse_for_redirection(char *input)
     }
 }
 
+void parseAndExecuteInput(char *input)
+{
+
+    char *actual_input = strdup(input); // save the command to be saved in history
+
+    dollar_parsed_input(&input);
+
+    parse_for_redirection(input);
+
+    char *input_after_redirection = strdup(input);
+    char *command = strtok(input, SPACE_DELIMETER);
+    if (!command)
+    {
+        exit_value = 1;
+        return;
+    }
+    if (strcmp(command, EXIT) == 0)
+    {
+        exitF();
+    }
+    else if (strcmp(command, CD) == 0)
+    {
+        cdF();
+    }
+    else if (strcmp(command, LS) == 0)
+    {
+        lsF();
+    }
+    else if (strcmp(command, HISTORY) == 0)
+    {
+        historyF();
+    }
+    else if (strcmp(command, EXPORT) == 0)
+    {
+        exportF();
+    }
+    else if (strcmp(command, LOCAL) == 0)
+    {
+        localF();
+    }
+    else if (strcmp(command, VARS) == 0)
+    {
+        varsF();
+    }
+    else
+    {
+        saveCommandToHistory(actual_input);
+        executeCommand(command, input_after_redirection);
+    }
+
+    free(actual_input);
+    free(input_after_redirection);
+}
+
+void executeShell(int argc, char *script)
+{
+    char *input = NULL;
+    FILE *input_source = NULL;
+    if (argc == 1)
+    {
+        input_source = stdin;
+    }
+    else if (argc == 2)
+    {
+        FILE *scriptf = fopen(script, "r");
+        if (scriptf == NULL)
+            exit(EXIT_FAILURE);
+        input_source = scriptf;
+    }
+
+    while (1)
+    {
+        if (argc == 1)
+            printf("wsh> ");
+        if (getString(&input, input_source) == EOF)
+            break;
+        parseAndExecuteInput(input);
+        input = NULL;
+        resetFDs();
+    }
+
+    free(input);
+    freeHistory();
+    freeLocalVars();
+}
+
 int main(int argc, char *argv[])
 {
-    char *bashscript = NULL;
+    char *wshscript = NULL;
     if (argc == 2)
     {
-        bashscript = argv[1];
+        wshscript = argv[1];
     }
     else if (argc > 2)
         exit(EXIT_FAILURE);
 
-    if (bashscript != NULL)
-        return 0;
-    char *input = NULL;
-    History *history = createHistory();
     localVars = createLocalVars();
-    char *actual_input = NULL;
+    history = createHistory();
 
     setenv("PATH", "/bin", 1);
 
-    while (printf("wsh> ") && getString(&input, stdin) != EOF)
-    {
-        actual_input = strdup(input); // save the command to be saved in history
-
-        input = dollar_parsed_input(input);
-
-        parse_for_redirection(input);
-
-        char *input_after_redirection = strdup(input);
-        char *command = strtok(input, SPACE_DELIMETER);
-        if (!command)
-        {
-            exit_value = 1;
-            continue;
-        }
-        if (strcmp(command, EXIT) == 0)
-        {
-            exitF();
-        }
-        else if (strcmp(command, CD) == 0)
-        {
-            cdF();
-        }
-        else if (strcmp(command, LS) == 0)
-        {
-            lsF();
-        }
-        else if (strcmp(command, HISTORY) == 0)
-        {
-            historyF(history);
-        }
-        else if (strcmp(command, EXPORT) == 0)
-        {
-            exportF();
-        }
-        else if (strcmp(command, LOCAL) == 0)
-        {
-            localF();
-        }
-        else if (strcmp(command, VARS) == 0)
-        {
-            varsF();
-        }
-        else
-        {
-            saveCommandToHistory(history, actual_input);
-            executeCommand(command, input_after_redirection);
-        }
-
-        resetFDs();
-        free(input);
-        free(actual_input);
-        free(input_after_redirection);
-        input = NULL;
-    }
-
-    free(input);
-    freeHistory(history);
-    freeLocalVars();
+    executeShell(argc, wshscript);
 
     exit(0);
 }
