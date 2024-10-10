@@ -247,9 +247,40 @@ void printD(char *name, int val)
     printf("[%s : %d]\n", name, val);
 }
 
+void freeHistory(void)
+{
+    for (int i = 0; i < history->cap; i++)
+    {
+        free(history->entries[i]);
+    }
+    free(history->entries);
+    free(history);
+}
+
+
+void freeLocalVars(void)
+{
+    struct Node *temp = localVars->head;
+    while (temp)
+    {
+        free(temp->key);
+        free(temp->value);
+        struct Node *currTemp = temp;
+        temp = temp->next;
+        free(currTemp);
+    }
+
+    free(localVars);
+}
+
+
 void exitF(void)
 {
     if(exit_value > 0) exit_value = -1;
+
+    freeHistory();
+    freeLocalVars();
+
     exit(exit_value);
 }
 
@@ -502,31 +533,6 @@ void printHistory(void)
         const char *command = getHistory(i);
         printf("%d) %s\n", i, command);
     }
-}
-
-void freeHistory(void)
-{
-    for (int i = 0; i < history->cap; i++)
-    {
-        free(history->entries[i]);
-    }
-    free(history->entries);
-    free(history);
-}
-
-void freeLocalVars(void)
-{
-    struct Node *temp = localVars->head;
-    while (temp)
-    {
-        free(temp->key);
-        free(temp->value);
-        struct Node *currTemp = temp;
-        temp = temp->next;
-        free(currTemp);
-    }
-
-    free(localVars);
 }
 
 void localF(void)
@@ -929,6 +935,10 @@ void parseAndExecuteInput(char *input)
     }
     if (strcmp(command, EXIT) == 0)
     {
+        free(input);
+        free(actual_input);
+        free(input_after_redirection);
+
         exitF();
     }
     else if (strcmp(command, CD) == 0)
@@ -961,6 +971,7 @@ void parseAndExecuteInput(char *input)
         executeCommand(command, input_after_redirection);
     }
 
+    free(input);
     free(actual_input);
     free(input_after_redirection);
 }
