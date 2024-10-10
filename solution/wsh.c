@@ -366,6 +366,22 @@ void addLocalVar(char *name, char *val)
     localVars->size++;
 }
 
+char *parse_dollar(char *token)
+{
+    token += 1;
+
+    char *value = NULL;
+    struct Node *node = NULL;
+    if ((value = getenv(token)))
+        return value;
+    else if ((node = getLocalVars(token)))
+    {
+        return node->value;
+    }
+    else
+        return "";
+}
+
 History *createHistory(void)
 {
     History *history = (History *)malloc(sizeof(History));
@@ -546,6 +562,10 @@ void localF(void)
 {
     char *name = strtok(NULL, EQUAL_SIGN_DELIMETER);
     char *value = strtok(NULL, EQUAL_SIGN_DELIMETER);
+    if (value != NULL && strlen(value) > 0 && value[0] == DOLLAR)
+    {
+        value = parse_dollar(value);
+    }
 
     if (name == NULL)
     {
@@ -565,6 +585,12 @@ void exportF(void)
 {
     char *name = strtok(NULL, EQUAL_SIGN_DELIMETER);
     char *value = strtok(NULL, EQUAL_SIGN_DELIMETER);
+
+    if (value != NULL && strlen(value) > 0 && value[0] == DOLLAR)
+    {
+        value = parse_dollar(value);
+    }
+
     if (name == NULL)
     {
         exit_value = 1;
@@ -641,21 +667,6 @@ void addArg(char ***args, char *arg, int *argc)
     }
 }
 
-char *parse_dollar(char *token)
-{
-    token += 1;
-
-    char *value = NULL;
-    struct Node *node = NULL;
-    if ((value = getenv(token)))
-        return value;
-    else if ((node = getLocalVars(token)))
-    {
-        return node->value;
-    }
-    else
-        return "";
-}
 // concatenate two strings with spaces
 char *concat(char *a, char *b)
 {
@@ -716,7 +727,7 @@ char **getArgv(char *input, int *argc)
     return argv;
 }
 
-int forkAndExec(char* path, char** argv)
+int forkAndExec(char *path, char **argv)
 {
     pid_t cpid = fork();
     if (cpid < 0)
@@ -733,7 +744,6 @@ int forkAndExec(char* path, char** argv)
         }
         perror("child process failed");
         exit_value = 1;
-
     }
     else
     {
@@ -743,10 +753,12 @@ int forkAndExec(char* path, char** argv)
     return exit_value = 0;
 }
 
-void updatePath(char** path, char*dir, char*command) {
+void updatePath(char **path, char *dir, char *command)
+{
     size_t newSize = sizeof(char) * (strlen(command) + strlen(dir) + 2); // 1 for '\0', another for '/'
     *path = realloc(*path, newSize);
-    if(!(*path)) exit(EXIT_FAILURE);
+    if (!(*path))
+        exit(EXIT_FAILURE);
     *path[0] = '\0';
     strcat(*path, dir);
     strcat(*path, "/");
@@ -768,7 +780,7 @@ int executeCommand(char *command, char *input)
         {
             exit_value = forkAndExec(newPath, argv);
         }
-        
+
         dir = strtok(NULL, COLON_SIGN_DELIMETER);
     }
     for (int i = 0; i < argc; i++)
