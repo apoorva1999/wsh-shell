@@ -249,8 +249,7 @@ void printD(char *name, int val)
 
 void exitF(void)
 {
-    if (exit_value < 0)
-        exit_value = 1;
+    if(exit_value > 0) exit_value = -1;
     exit(exit_value);
 }
 
@@ -260,7 +259,7 @@ void copyString(char **dest, const char *src)
     if (!(*dest))
     {
         fprintf(stderr, "Memory allocation failed\n");
-        exit_value = 1;
+        exit_value = -1;
         return;
     }
 
@@ -404,8 +403,7 @@ History *createHistory(void)
     history->start = 0;
     if (history->entries == NULL)
     {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit_value = 1;
+        exit(EXIT_FAILURE);
     }
 
     for (int i = 0; i < history->cap; i++)
@@ -429,9 +427,7 @@ void addEntryInHistory(const char *command)
 
     if (history->entries[history->start] == NULL)
     {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit_value = 1;
-        return;
+        exit(EXIT_FAILURE);
     }
     strcpy(history->entries[history->start], command);
     history->start = (history->start + 1) % history->cap;
@@ -459,9 +455,7 @@ void resizeHistory(int newCapacity)
     char **newEntries = (char **)malloc(newCapacity * sizeof(char *));
     if (!newEntries)
     {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit_value = 1;
-        return;
+        exit(EXIT_FAILURE);
     }
 
     int newSize;
@@ -544,7 +538,7 @@ void localF(void)
 
     if (name == NULL)
     {
-        exit_value = 1;
+        exit_value = -1;
         return;
     }
 
@@ -568,7 +562,7 @@ void exportF(void)
 
     if (name == NULL)
     {
-        exit_value = 1;
+        exit_value = -1;
         return;
     }
     if (value == NULL)
@@ -584,7 +578,7 @@ void resetFDs(void)
     {
         if (close(file_fd) < 0)
         {
-            exit_value = 1;
+            exit_value = -1;
         }
     }
 
@@ -708,17 +702,17 @@ int forkAndExec(char *path, char **argv)
     if (cpid < 0)
     {
         // perror("fork");
-        return exit_value = 1;
+        return exit_value = -1;
     }
     else if (cpid == 0)
     {
         if (execv(path, argv) == -1)
         {
             // perror("execv failed");
-            return exit_value = 1;
+            return exit_value = -1;
         }
         // perror("child process failed");
-        exit_value = 1;
+        exit_value = -1;
     }
     else
     {
@@ -789,7 +783,7 @@ int executeCommand(char *command, char *input)
     else
     {
         // perror("invalid command");
-        exit_value = 1;
+        exit_value = -1;
     }
 
     for (int i = 0; i < argc; i++)
@@ -884,7 +878,7 @@ void historyF(void)
         if (n == -1)
         {
             fprintf(stderr, "Non-integer passed to history command\n");
-            exit_value = 1;
+            exit_value = -1;
             return;
         }
         char *nthHistory = getHistory(n);
@@ -928,7 +922,7 @@ void parseAndExecuteInput(char *input)
     char *command = strtok(input, SPACE_DELIMETER);
     if (!command)
     {
-        exit_value = 1;
+        exit_value = -1;
         return;
     }
     if (strcmp(command, EXIT) == 0)
@@ -1022,5 +1016,5 @@ int main(int argc, char *argv[])
     setenv("PATH", "/bin", 1);
     executeShell(argc, wshscript);
 
-    exit(0);
+    exit(exit_value);
 }
