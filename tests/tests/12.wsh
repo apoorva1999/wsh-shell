@@ -1,0 +1,2 @@
+export PATH=a:/bin:b:c
+echo hello

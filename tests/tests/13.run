@@ -1,0 +1,1 @@
+../solution/wsh <tests/13.wsh ; diff tests/13-out tests/13-out.orig
