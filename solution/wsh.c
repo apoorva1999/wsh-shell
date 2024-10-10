@@ -730,12 +730,18 @@ void updatePath(char **path, char *dir, char *command)
     strcat(*path, command);
 }
 
-int executeCommand(char *command, char *input)
+bool fullPath(char *command, char **argv)
 {
-    const char *PATH = getenv("PATH");
-    int argc = 0;
-    char **argv = getArgv(input, &argc);
-    char *path = strdup(PATH);
+    if (access(command, X_OK) == 0)
+    {
+        exit_value = forkAndExec(command, argv);
+        return 1;
+    }
+    return 0;
+}
+
+void searchInPATH(char *command, char *path, char **argv)
+{
     char *dir = strtok(path, COLON_SIGN_DELIMETER);
     char *newPath = NULL;
     while (dir)
@@ -748,10 +754,29 @@ int executeCommand(char *command, char *input)
 
         dir = strtok(NULL, COLON_SIGN_DELIMETER);
     }
+
+    free(newPath);
+}
+
+int executeCommand(char *command, char *input)
+{
+
+    const char *PATH = getenv("PATH");
+    int argc = 0;
+    char **argv = getArgv(input, &argc);
+    char *path = strdup(PATH);
+
+    if (fullPath(command, argv))
+    {
+    }
+    else
+    {
+        searchInPATH(command, path, argv);
+    }
+
     for (int i = 0; i < argc; i++)
         free(argv[i]);
     free(argv);
-    free(newPath);
     free(path);
     return exit_value;
 }
