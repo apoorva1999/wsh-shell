@@ -289,9 +289,8 @@ void copyString(char **dest, const char *src)
     *dest = realloc(*dest, sizeof(char) * (strlen(src) + 1));
     if (!(*dest))
     {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit_value = -1;
-        return;
+        // fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
     }
 
     strcpy(*dest, src);
@@ -430,6 +429,10 @@ char *parse_dollar(char *token)
 History *createHistory(void)
 {
     History *history = (History *)malloc(sizeof(History));
+
+    if(history == NULL) {
+        exit(EXIT_FAILURE);
+    }
     history->size = 0;
     history->cap = HISTORY_CAP;
     history->entries = malloc(sizeof(char *) * HISTORY_CAP);
@@ -832,16 +835,20 @@ void parse_for_redirection(char *input)
                 num = atoi_check(numS); /// TODO NUM CHECK
                 if (num == -1)
                 {
-                    fprintf(stderr, "Non-integer passed to history set command\n");
+                    // fprintf(stderr, "Non-integer passed to history set command\n");
+                    free(numS);
+                    free(file_path);
                     exit_value = 1;
                     return;
                 }
                 N_FILENO = num;
                 ptr = ptr3;
+                free(numS);
             }
 
             ptr[0] = '\0'; // to extract substring before >>hello.txt
             redirection_functions[i](file_path);
+            
             free(file_path);
             break;
         }
@@ -874,7 +881,7 @@ void historyF(void)
         int n = atoi_check(command);
         if (n == -1)
         {
-            fprintf(stderr, "Non-integer passed to history set command\n");
+            // fprintf(std.err, "Non-integer passed to history set command\n");
             exit_value = 1;
             return;
         }
@@ -885,7 +892,7 @@ void historyF(void)
         int n = atoi_check(command);
         if (n == -1)
         {
-            fprintf(stderr, "Non-integer passed to history command\n");
+            // fprintf(stderr, "Non-integer passed to history command\n");
             exit_value = -1;
             return;
         }
