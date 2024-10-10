@@ -886,8 +886,29 @@ void historyF(void)
     }
 }
 
+bool isComment(char *str)
+{
+    if (str == NULL)
+        return 0;
+    while (*str != '\0' && isspace((unsigned char)*str))
+    {
+        str++;
+    }
+    if (*str == '#')
+    {
+        return 1;
+    }
+    return 0;
+}
+
 void parseAndExecuteInput(char *input)
 {
+
+    if (isComment(input))
+    {
+        free(input);
+        return;
+    }
 
     char *actual_input = strdup(input); // save the command to be saved in history
 
