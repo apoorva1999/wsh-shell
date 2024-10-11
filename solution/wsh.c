@@ -40,7 +40,8 @@ void printS(char *name, const char *val)
 
 int atoi_check(char *number)
 {
-    if(!number) return -1;
+    if (!number)
+        return -1;
     for (int i = 0; number[i] != '\0'; i++)
     {
         if (!isdigit(number[i]))
@@ -272,7 +273,7 @@ void freeLocalVars(void)
 
 void exitF(void)
 {
-    if (exit_value > 0)
+    if (exit_value != 0)
         exit_value = -1;
 
     freeHistory();
@@ -891,7 +892,7 @@ void historyF(void)
         if (n == -1)
         {
             // fprintf(std.err, "Non-integer passed to history set command\n");
-            exit_value = 1;
+            exit_value = -1;
             return;
         }
         resizeHistory(n);
@@ -945,7 +946,7 @@ void parseAndExecuteInput(char *input)
     char *input_after_redirection = strdup(input);
     char *command = strtok(input, SPACE_DELIMETER);
     if (!command)
-    {   //null command
+    { // null command
         exit_value = -1;
         return;
     }
@@ -1045,5 +1046,7 @@ int main(int argc, char *argv[])
     setenv("PATH", "/bin", 1);
     executeShell(argc, wshscript);
 
+    if (exit_value != 0)
+        exit_value = -1;
     exit(exit_value);
 }
