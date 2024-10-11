@@ -929,6 +929,25 @@ bool isComment(char *str)
     return 0;
 }
 
+bool isbuiltin(char *input)
+{
+    if (strcmp(input, EXIT) == 0)
+        return 1;
+    if (strcmp(input, CD) == 0)
+        return 1;
+    if (strcmp(input, LS) == 0)
+        return 1;
+    if (strcmp(input, HISTORY) == 0)
+        return 1;
+    if (strcmp(input, EXPORT) == 0)
+        return 1;
+    if (strcmp(input, LOCAL) == 0)
+        return 1;
+    if (strcmp(input, VARS) == 0)
+        return 1;
+    return 0;
+}
+
 void parseAndExecuteInput(char *input)
 {
 
@@ -939,6 +958,14 @@ void parseAndExecuteInput(char *input)
     }
 
     char *actual_input = strdup(input); // save the command to be saved in history
+    char *first_token_of_actual_input = strdup(actual_input);
+    first_token_of_actual_input = strtok(first_token_of_actual_input, SPACE_DELIMETER);
+    if (!isbuiltin(first_token_of_actual_input))
+    {
+        saveCommandToHistory(actual_input);
+    }
+    free(actual_input);
+    free(first_token_of_actual_input);
 
     dollar_parsed_input(&input);
 
@@ -951,6 +978,7 @@ void parseAndExecuteInput(char *input)
         exit_value = -1;
         return;
     }
+
     if (strcmp(command, EXIT) == 0)
     {
 
@@ -960,7 +988,6 @@ void parseAndExecuteInput(char *input)
             return;
         }
         free(input);
-        free(actual_input);
         free(input_after_redirection);
 
         exitF();
@@ -1001,12 +1028,10 @@ void parseAndExecuteInput(char *input)
     }
     else // non built in commands
     {
-        saveCommandToHistory(actual_input);
         executeCommand(command, input_after_redirection);
     }
 
     free(input);
-    free(actual_input);
     free(input_after_redirection);
 }
 
