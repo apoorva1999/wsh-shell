@@ -791,6 +791,7 @@ bool searchInPATH(char *command, char *path, char **argv)
 
 int executeCommand(char *command, char *input)
 {
+    exit_value = 0;
     const char *PATH = getenv("PATH");
     int argc = 0;
     char **argv = getArgv(input, &argc);
@@ -952,8 +953,6 @@ bool isbuiltin(char *input)
 
 void parseAndExecuteInput(char *input)
 {   
-    exit_value = 0;
-
     if (isComment(input))
     {
         free(input);
