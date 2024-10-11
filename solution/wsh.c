@@ -328,6 +328,7 @@ void varsF(void)
         printf("%s=%s\n", temp->key, temp->value);
         temp = temp->next;
     }
+    exit_value = 0;
 }
 
 int is_hidden(const struct dirent *entry)
@@ -352,6 +353,7 @@ void lsF(void)
     }
 
     free(namelist);
+    exit_value = 0;
 }
 
 LocalVars *createLocalVars(void)
@@ -560,6 +562,7 @@ void localF(void)
     }
 
     addLocalVar(name, value);
+    exit_value = 0;
 }
 
 void exportF(void)
@@ -789,6 +792,7 @@ bool searchInPATH(char *command, char *path, char **argv)
 int executeCommand(char *command, char *input)
 {
 
+    exit_value = 0;
     const char *PATH = getenv("PATH");
     int argc = 0;
     char **argv = getArgv(input, &argc);
@@ -879,7 +883,7 @@ void executeNthHistory(char *nthHistory)
 void historyF(void)
 {
     char *command = strtok(NULL, SPACE_DELIMETER);
-
+    exit_value = 0;
     if (command == NULL)
     {
         // just history command
