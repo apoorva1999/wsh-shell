@@ -59,22 +59,23 @@ void log_error(const char *fmt, ...)
     va_end(args);
 }
 
-int save_fd(int oldfd, int *newfd, char *fd_name)
+int save_fd(int oldfd, int *newfd)
 {
+
     *newfd = dup(oldfd);
     if (*newfd < 0)
     {
-        log_error("Failed to duplicate %s", fd_name);
+        // log_error("Failed to duplicate %s", fd_name);
         return 1;
     }
     return 0;
 }
 
-int copy_fd(int fd1, int fd2, char *fd1_name, char *fd2_name)
+int copy_fd(int fd1, int fd2)
 {
     if (dup2(fd1, fd2) < 0)
     {
-        log_error("Failed to duplicate %s to %s", fd1_name, fd2_name);
+        // log_error("Failed to duplicate %s to %s", fd1_name, fd2_name);
         return 1;
     }
     return 0;
@@ -85,9 +86,9 @@ int append_output_error(char *input)
     // &>>
     input += 3;
 
-    if (save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd"))
+    if (save_fd(STDOUT_FILENO, &stdout_fd))
         return 1;
-    if (save_fd(STDERR_FILENO, &stderr_fd, "stderr_fd"))
+    if (save_fd(STDERR_FILENO, &stderr_fd))
         return 1;
 
     file_fd = open(input, O_WRONLY | O_CREAT | O_APPEND, 0644);
@@ -97,9 +98,9 @@ int append_output_error(char *input)
         return 1;
     }
 
-    if (copy_fd(file_fd, STDOUT_FILENO, "file_fd", "stdout_fd"))
+    if (copy_fd(file_fd, STDOUT_FILENO))
         return 1;
-    if (copy_fd(file_fd, STDERR_FILENO, "file_fd", "stderr_fd"))
+    if (copy_fd(file_fd, STDERR_FILENO))
         return 1;
 
     return 0;
@@ -110,9 +111,9 @@ int redirect_output_error(char *input)
     // &>
     input += 2;
 
-    if (save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd"))
+    if (save_fd(STDOUT_FILENO, &stdout_fd))
         return 1;
-    if (save_fd(STDERR_FILENO, &stderr_fd, "stderr_fd"))
+    if (save_fd(STDERR_FILENO, &stderr_fd))
         return 1;
 
     file_fd = open(input, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -122,9 +123,9 @@ int redirect_output_error(char *input)
         return 1;
     }
 
-    if (copy_fd(file_fd, STDOUT_FILENO, "file_fd", "stdout_fd"))
+    if (copy_fd(file_fd, STDOUT_FILENO))
         return 1;
-    if (copy_fd(file_fd, STDERR_FILENO, "file_fd", "stderr_fd"))
+    if (copy_fd(file_fd, STDERR_FILENO))
         return 1;
 
     return 0;
@@ -139,11 +140,14 @@ int append_output(char *input)
 
     if (N_FILENO == -1)
     {
-        if (save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd"))
+        if (save_fd(STDOUT_FILENO, &stdout_fd))
             return 1;
     }
-    // else if (save_fd(N_FILENO, &n_fd, "n_fd"))
-    //     return 1;
+    else
+    {
+        save_fd(N_FILENO, &n_fd);
+    }
+    // return 1;
 
     file_fd = open(input, O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (file_fd < 0)
@@ -152,7 +156,7 @@ int append_output(char *input)
         return 1;
     }
 
-    if (copy_fd(file_fd, source_fd, "file_fd", "stdout_fd"))
+    if (copy_fd(file_fd, source_fd))
         return 1;
 
     return 0;
@@ -166,11 +170,13 @@ int redirect_output(char *input)
 
     if (N_FILENO == -1)
     {
-        if (save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd"))
+        if (save_fd(STDOUT_FILENO, &stdout_fd))
             return 1;
     }
-    // else if (save_fd(N_FILENO, &n_fd, "n_fd"))
-    //     return 1;
+    else
+    {
+        save_fd(N_FILENO, &n_fd);
+    }
 
     file_fd = open(input, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_fd < 0)
@@ -179,7 +185,7 @@ int redirect_output(char *input)
         return 1;
     }
 
-    if (copy_fd(file_fd, source_fd, "file_fd", "stdout_fd"))
+    if (copy_fd(file_fd, source_fd))
         return 1;
 
     return 0;
@@ -194,12 +200,14 @@ int redirect_input(char *input)
 
     if (N_FILENO == -1)
     {
-        if (save_fd(STDIN_FILENO, &stdin_fd, "stdin_fd"))
+        if (save_fd(STDIN_FILENO, &stdin_fd))
             return 1;
     }
-
-    else if (save_fd(source_fd, &n_fd, "n_fd"))
-        return 1;
+    else
+    {
+        save_fd(source_fd, &n_fd);
+    }
+    //     return 1;
 
     file_fd = open(input, O_RDONLY | O_CREAT, 0644);
     if (file_fd < 0)
@@ -208,7 +216,7 @@ int redirect_input(char *input)
         return 1;
     }
 
-    if (copy_fd(file_fd, source_fd, "file_fd", "stdout_fd"))
+    if (copy_fd(file_fd, source_fd))
         return 1;
 
     return 0;
@@ -257,7 +265,6 @@ void freeHistory(void)
     free(history);
 }
 
-
 void freeLocalVars(void)
 {
     struct Node *temp = localVars->head;
@@ -273,10 +280,10 @@ void freeLocalVars(void)
     free(localVars);
 }
 
-
 void exitF(void)
 {
-    if(exit_value > 0) exit_value = -1;
+    if (exit_value > 0)
+        exit_value = -1;
 
     freeHistory();
     freeLocalVars();
@@ -313,7 +320,8 @@ int getString(char **input, FILE *f)
 void cdF(void)
 {
     char *dir = strtok(NULL, SPACE_DELIMETER);
-    if(dir == NULL || strtok(NULL, SPACE_DELIMETER) != NULL) {
+    if (dir == NULL || strtok(NULL, SPACE_DELIMETER) != NULL)
+    {
         exit_value = -1; // more than one aruments or no arguments
         return;
     }
@@ -430,7 +438,8 @@ History *createHistory(void)
 {
     History *history = (History *)malloc(sizeof(History));
 
-    if(history == NULL) {
+    if (history == NULL)
+    {
         exit(EXIT_FAILURE);
     }
     history->size = 0;
@@ -856,7 +865,7 @@ void parse_for_redirection(char *input)
 
             ptr[0] = '\0'; // to extract substring before >>hello.txt
             redirection_functions[i](file_path);
-            
+
             free(file_path);
             break;
         }
