@@ -273,6 +273,7 @@ void freeLocalVars(void)
 
 void exitF(void)
 {
+
     if (exit_value != 0)
         exit_value = -1;
 
@@ -952,6 +953,12 @@ void parseAndExecuteInput(char *input)
     }
     if (strcmp(command, EXIT) == 0)
     {
+
+        if (strtok(NULL, SPACE_DELIMETER) != NULL)
+        {
+            exit_value = -1;
+            return;
+        }
         free(input);
         free(actual_input);
         free(input_after_redirection);
@@ -964,6 +971,11 @@ void parseAndExecuteInput(char *input)
     }
     else if (strcmp(command, LS) == 0)
     {
+        if (strtok(NULL, SPACE_DELIMETER) != NULL)
+        {
+            exit_value = -1;
+            return;
+        }
         lsF();
     }
     else if (strcmp(command, HISTORY) == 0)
@@ -980,6 +992,11 @@ void parseAndExecuteInput(char *input)
     }
     else if (strcmp(command, VARS) == 0)
     {
+        if (strtok(NULL, SPACE_DELIMETER) != NULL)
+        {
+            exit_value = -1;
+            return;
+        }
         varsF();
     }
     else // non built in commands
