@@ -40,6 +40,7 @@ void printS(char *name, const char *val)
 
 int atoi_check(char *number)
 {
+    if(!number) return -1;
     for (int i = 0; number[i] != '\0'; i++)
     {
         if (!isdigit(number[i]))
@@ -879,10 +880,12 @@ void historyF(void)
 
     if (command == NULL)
     {
+        // just history command
         printHistory();
     }
     else if (strcmp(command, HISTORY_SET) == 0)
     {
+        // history set n
         command = strtok(NULL, SPACE_DELIMETER);
         int n = atoi_check(command);
         if (n == -1)
@@ -895,6 +898,7 @@ void historyF(void)
     }
     else
     {
+        // history n
         int n = atoi_check(command);
         if (n == -1)
         {
@@ -904,7 +908,6 @@ void historyF(void)
         }
         char *nthHistory = getHistory(n);
         if (nthHistory)
-            // TODO
             executeNthHistory(nthHistory);
     }
 }
@@ -942,7 +945,7 @@ void parseAndExecuteInput(char *input)
     char *input_after_redirection = strdup(input);
     char *command = strtok(input, SPACE_DELIMETER);
     if (!command)
-    {
+    {   //null command
         exit_value = -1;
         return;
     }
