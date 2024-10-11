@@ -709,7 +709,9 @@ char **getArgv(char *input, int *argc)
 
 int forkAndExec(char *path, char **argv)
 {
+
     pid_t cpid = fork();
+    int status, w;
     if (cpid < 0)
     {
         // perror("fork");
@@ -727,8 +729,14 @@ int forkAndExec(char *path, char **argv)
     }
     else
     {
-        wait(NULL);
-        return exit_value = 0;
+        do
+        {
+            w = waitpid(cpid, &status, WUNTRACED | WCONTINUED);
+            if (w == -1)
+            {
+                return exit_value = -1;
+            }
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     }
     return exit_value = 0;
 }
