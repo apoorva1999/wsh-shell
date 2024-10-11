@@ -953,7 +953,8 @@ bool isbuiltin(char *input)
 }
 
 void parseAndExecuteInput(char *input)
-{
+{   
+    exit_value = 0;
 
     if (isComment(input))
     {
