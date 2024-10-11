@@ -985,6 +985,8 @@ void parseAndExecuteInput(char *input)
         if (strtok(NULL, SPACE_DELIMETER) != NULL)
         {
             exit_value = -1;
+            free(input);
+            free(input_after_redirection);
             return;
         }
         free(input);
@@ -1011,10 +1013,26 @@ void parseAndExecuteInput(char *input)
     }
     else if (strcmp(command, EXPORT) == 0)
     {
+        char *equal = strstr(input_after_redirection, EQUAL_SIGN_DELIMETER);
+        if (equal == NULL)
+        {
+            exit_value = -1;
+            free(input);
+            free(input_after_redirection);
+            return;
+        }
         exportF();
     }
     else if (strcmp(command, LOCAL) == 0)
     {
+        char *equal = strstr(input_after_redirection, EQUAL_SIGN_DELIMETER);
+        if (equal == NULL)
+        {
+            exit_value = -1;
+            free(input);
+            free(input_after_redirection);
+            return;
+        }
         localF();
     }
     else if (strcmp(command, VARS) == 0)
