@@ -48,17 +48,6 @@ int atoi_check(char *number)
     return atoi(number);
 }
 
-void log_error(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, ": %s\n", strerror(errno));
-
-    va_end(args);
-}
-
 int save_fd(int oldfd, int *newfd)
 {
 
