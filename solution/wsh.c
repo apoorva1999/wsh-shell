@@ -142,8 +142,8 @@ int append_output(char *input)
         if (save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd"))
             return 1;
     }
-    else if (save_fd(N_FILENO, &n_fd, "n_fd"))
-        return 1;
+    // else if (save_fd(N_FILENO, &n_fd, "n_fd"))
+    //     return 1;
 
     file_fd = open(input, O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (file_fd < 0)
@@ -169,8 +169,8 @@ int redirect_output(char *input)
         if (save_fd(STDOUT_FILENO, &stdout_fd, "stdout_fd"))
             return 1;
     }
-    else if (save_fd(N_FILENO, &n_fd, "n_fd"))
-        return 1;
+    // else if (save_fd(N_FILENO, &n_fd, "n_fd"))
+    //     return 1;
 
     file_fd = open(input, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file_fd < 0)
