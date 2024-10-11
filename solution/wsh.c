@@ -952,7 +952,7 @@ bool isbuiltin(char *input)
 }
 
 void parseAndExecuteInput(char *input)
-{   
+{
     if (isComment(input))
     {
         free(input);
@@ -1004,6 +1004,8 @@ void parseAndExecuteInput(char *input)
     {
         if (strtok(NULL, SPACE_DELIMETER) != NULL)
         {
+            free(input);
+            free(input_after_redirection);
             exit_value = -1;
             return;
         }
@@ -1041,6 +1043,8 @@ void parseAndExecuteInput(char *input)
     {
         if (strtok(NULL, SPACE_DELIMETER) != NULL)
         {
+            free(input);
+            free(input_after_redirection);
             exit_value = -1;
             return;
         }
