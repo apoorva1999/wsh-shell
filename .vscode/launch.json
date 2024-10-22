@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/solution/wsh-dbg",
-            // "args": ["${workspaceFolder}/tests/tests/4.board", "${workspaceFolder}/dict.txt"],
+            // "args": ["${workspaceFolder}/solution/script.wsh"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

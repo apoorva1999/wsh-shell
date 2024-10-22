@@ -1,0 +1,3 @@
+local a=lorem_ipsum_dolor_sit_amet
+local a=hello
+echo $a

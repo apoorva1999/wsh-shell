@@ -1,0 +1,21 @@
+history set 10
+echo 1
+echo 2
+echo 3
+echo 4
+echo 5
+echo 6
+echo 7
+echo 8
+echo 9
+echo 10
+history
+history 3
+history 3
+history 3
+history
+history 70
+history set 5
+history
+history set 10
+history

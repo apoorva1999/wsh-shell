@@ -1,0 +1,15 @@
+#!./wsh
+
+ # this is a comment!
+# this is also a comment!
+        ## and so is this :)
+echo hello
+local c=done
+echo $c
+history
+history 1 
+history set 10
+export a=ps
+local a=$c
+echo $a
+$a

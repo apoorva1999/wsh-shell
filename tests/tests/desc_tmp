@@ -1,0 +1,79 @@
+1.desc
+Basic exec.  Score: 4
+2.desc
+Basic cd usage: absolute path. Score: 2
+3.desc
+One command successfully added to history. Score: 2
+4.desc
+Testing the setting of a local variable. Score: 1
+5.desc
+Batch mode for external commands. Score: 2
+6.desc
+Running ls inside ../solution directory. 6.pre creates 6.out.
+7.desc
+Finding out if execvp is used.
+8.desc
+Commands in comments should not be run. Score: 1
+9.desc
+Basic input redirection. Score: 2
+10.desc
+Setting PATH to the initial value
+11.desc
+Setting PATH to several non-existent directories
+12.desc
+Setting PATH to several non-existent directories and /bin
+13.desc
+Stderr redirection
+14.desc
+Multiple cd usage with local variables
+15.desc
+Running command with local variables
+16.desc
+Redirecting fd 3
+17.desc
+Input redirection,>>, &> and &>> test
+18.desc
+history with many commands
+19.desc
+bad builtin parameters
+20.desc 
+Truncate history when it is reduced in size. 
+E.g. history set 10, (10 unique commands), history set 5, 
+history set 10. There should only be 5 items in history.
+21.desc
+Test consecutive duplicate commands in history. 
+/bin/ls
+/bin/ls
+history —> there should be one item in history
+22.desc
+Test non-consecutive duplicate commands in history
+/bin/ls
+uname
+/bin/ls
+history —-> there should be three items in history
+23.desc
+Overwriting variables
+local a=some_longer_text
+local a=hello
+echo $a —-> should print “hello” and not intermingled output
+24.desc 
+Ensure environment variable takes precedence over 
+local variable with same name
+25.desc
+Large number of local variables 
+Total 10000 commands, assigning/overwriting variables 
+and echo-ing variables.
+Set a 5 minute timeout. (Giving a reasonable amount of time, 
+but not to fall in an infinite loop)
+26.desc
+Valgrind check for about 1000 commands
+27.desc
+Valgrind check for about 10 commands
+28.desc
+diff will return with exit value 1.
+29.desc
+A user program that returns value 42
+30.desc
+History <n> check
+31.desc
+Checking non-zero return val after a wrong command

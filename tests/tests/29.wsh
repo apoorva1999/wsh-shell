@@ -1,0 +1,2 @@
+gcc ./tests/29.c -o ./tests/29.tmp
+./tests/29.tmp

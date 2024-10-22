@@ -1,0 +1,1 @@
+timeout 5m valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ../solution/wsh <tests/27.wsh 2>&1 >/dev/null | grep "no leaks are possible" > /dev/null

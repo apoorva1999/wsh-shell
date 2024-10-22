@@ -1,0 +1,2 @@
+../solution/wsh tests/31.wsh 2>/dev/null;
+[ $? -ne 0 ] && echo "ok"

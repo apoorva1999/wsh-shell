@@ -1,0 +1,8 @@
+grep hello <tests/16.c
+gcc ./tests/17.c -o ./tests/17.tmp
+./tests/17.tmp &>tests/17-out
+echo hi >>tests/17-out
+./tests/17.tmp &>>tests/17-out
+echo hiagain >>tests/17-out
+diff tests/17-out tests/17.out.orig
+exit

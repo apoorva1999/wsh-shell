@@ -1,0 +1,1 @@
+LANG=C ls -1 ../solution | tr -d '*' > tests/15.out

@@ -1,0 +1,3 @@
+gcc ./tests/16.c -o ./tests/16.tmp
+./tests/16.tmp 3>tests/16-out
+diff tests/16-out tests/16.out.orig

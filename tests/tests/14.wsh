@@ -1,0 +1,39 @@
+local a=home
+cd /
+cd $a
+pwd
+cd /
+local b=usr
+cd $b
+pwd
+cd /
+cd $a
+pwd
+cd /
+cd $b
+pwd
+cd /
+cd $a
+pwd
+cd /
+cd $b
+pwd
+cd /
+cd $a
+pwd
+cd /
+cd $b
+pwd
+cd /
+cd $a
+pwd
+cd /
+cd $b
+pwd
+cd /
+cd $a
+pwd
+cd /
+cd $b
+pwd
+exit

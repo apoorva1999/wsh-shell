@@ -1,0 +1,23 @@
+echo hello
+history
+echo second
+history
+echo lorem
+history
+echo ipsum
+history
+echo dolor
+history
+echo sit
+history
+echo amet
+history
+echo abcd
+history
+echo cdef
+history
+echo deadbeef
+history
+echo asdf
+history
+exit

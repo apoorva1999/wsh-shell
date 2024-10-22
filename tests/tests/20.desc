@@ -1,0 +1,1 @@
+Truncate history when it is reduced in size. E.g. history set 10, (10 unique commands), history set 5, history set 10. There should only be 5 items in history.

@@ -7,7 +7,7 @@
     - $< or $^
 - Comments
     - executable scripts
-- Redirections
+- Redirections  DONE    
     - >
     - < 
     - >>
@@ -16,21 +16,21 @@
 - Environment variables and shell variables
     - Shell variables (local)       DONE
     - export
-    - env (not a shell built-in)- print all environment variables
+    - env (not a shell built-in)- print all environment variables       TODO
     - For local variables, we use a built-in command in our shell called vars      DONE
-    - Whenever the $ sign is used in a command, it is always followed by a variable name.
+    - Whenever the $ sign is used in a command, it is always followed by a variable name.       DONE
 - Paths 
-    -  access()
-    - Built-in.
-    - Full or relative path.
-    - Paths specified by $PATH.
+    - access()   DONE
+    - Built-in.  DONE
+    - Full or relative path.            TODO
+    - Paths specified by $PATH.         DONE
 - history   DONE
     - history set <n>       DONE
-    - execute a command - history <n>
+    - execute a command - history <n>    TODO
 - built in commmands
     - exit  DONE (kinda)
     - cd    DONE
-    - export    
+    - export   DONE 
     - local  DONE
     - vars      DONE
     - history   DONE
@@ -40,10 +40,37 @@
 
 
 done
-exit, cd, ls, history,local
+exit, cd, ls, history,local,path, redirection, env, vars, $,export,full path given
 
 todo
-path, redirection, env vars, export, $
+redirection n,atoi check 
 
 
-replace strcpy with strdup
+- replace strcpy with strdup - memory
+- order of commands - builtin, , find in path (done)
+
+
+
+
+- if there is an error in some command which can impact future things, should we exit or not?
+
+
+
+
+path (done)
+exit
+history execute (done)
+comments (done)
+full path (done)
+invalid commands (done)
+number check (done)
+wait(null) done
+piazza
+
+- Makefile done
+    - CC
+    - CFLAGS
+    - LOGIN 
+    - SUBMITPATH
+    - $@
+    - $< or $^

@@ -1,0 +1,2 @@
+../solution/wsh <tests/19.wsh 2>/dev/null | grep the_end > /dev/null;
+[ $? -eq 0 ] && echo "ok"

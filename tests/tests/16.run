@@ -1,0 +1,1 @@
+timeout 10 ../solution/wsh tests/16.wsh

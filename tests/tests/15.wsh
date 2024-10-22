@@ -1,0 +1,4 @@
+local a=ls
+cd ../solution
+$a
+exit

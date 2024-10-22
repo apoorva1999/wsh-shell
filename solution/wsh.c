@@ -844,7 +844,7 @@ void parse_for_redirection(char *input)
                 char *ptr3 = ptr2 + 1;
                 int num_len = ptr - ptr3;
                 char *numS = strndup(ptr3, num_len);
-                num = atoi_check(numS); /// TODO NUM CHECK
+                num = atoi_check(numS); /// TODO NUM CHECK - DONE
                 if (num == -1)
                 {
                     // fprintf(stderr, "Non-integer passed to history set command\n");
@@ -973,7 +973,7 @@ void parseAndExecuteInput(char *input)
 
     parse_for_redirection(input);
 
-    char *input_after_redirection = strdup(input);
+    char *input_after_redirection = strdup(input); // because input is going to be changed by strok in the next line
     char *command = strtok(input, SPACE_DELIMETER);
     if (!command)
     { // null command
@@ -1106,8 +1106,8 @@ int main(int argc, char *argv[])
     else if (argc > 2)
         exit(EXIT_FAILURE);
 
-    localVars = createLocalVars();
-    history = createHistory();
+    localVars = createLocalVars(); // initializing struct
+    history = createHistory(); // initializing struct
 
     setenv("PATH", "/bin", 1);
     executeShell(argc, wshscript);

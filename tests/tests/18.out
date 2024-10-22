@@ -1,0 +1,57 @@
+wsh> hello
+wsh> 1) echo hello
+wsh> second
+wsh> 1) echo second
+2) echo hello
+wsh> lorem
+wsh> 1) echo lorem
+2) echo second
+3) echo hello
+wsh> ipsum
+wsh> 1) echo ipsum
+2) echo lorem
+3) echo second
+4) echo hello
+wsh> dolor
+wsh> 1) echo dolor
+2) echo ipsum
+3) echo lorem
+4) echo second
+5) echo hello
+wsh> sit
+wsh> 1) echo sit
+2) echo dolor
+3) echo ipsum
+4) echo lorem
+5) echo second
+wsh> amet
+wsh> 1) echo amet
+2) echo sit
+3) echo dolor
+4) echo ipsum
+5) echo lorem
+wsh> abcd
+wsh> 1) echo abcd
+2) echo amet
+3) echo sit
+4) echo dolor
+5) echo ipsum
+wsh> cdef
+wsh> 1) echo cdef
+2) echo abcd
+3) echo amet
+4) echo sit
+5) echo dolor
+wsh> deadbeef
+wsh> 1) echo deadbeef
+2) echo cdef
+3) echo abcd
+4) echo amet
+5) echo sit
+wsh> asdf
+wsh> 1) echo asdf
+2) echo deadbeef
+3) echo cdef
+4) echo abcd
+5) echo amet
+wsh> 
